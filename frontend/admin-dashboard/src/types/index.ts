@@ -16,6 +16,9 @@ export interface Transaction {
   violations: string[];
   riskLevel: string;
   location?: string;
+  userAuthenticated?: boolean | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
 }
 
 export interface Metrics {

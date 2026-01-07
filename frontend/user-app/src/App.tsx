@@ -3,10 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from './components/ui/Card';
 import { TransactionForm } from './components/TransactionForm';
 import { ResultDisplay } from './components/ResultDisplay';
+import { TransactionsPage } from './pages/TransactionsPage';
 import { validateTransaction } from './services/api';
 import type { TransactionRequest, TransactionResponse, TransactionStatus } from './types/transaction';
 
+type Page = 'new-transaction' | 'my-transactions';
+
 function App() {
+  const [currentPage, setCurrentPage] = useState<Page>('new-transaction');
   const [status, setStatus] = useState<TransactionStatus>('idle');
   const [result, setResult] = useState<TransactionResponse | null>(null);
   const [currentTransaction, setCurrentTransaction] = useState<TransactionRequest | null>(null);
@@ -35,8 +39,55 @@ function App() {
     setError(null);
   };
 
+  // Si estamos en la página de transacciones, mostrarla
+  if (currentPage === 'my-transactions') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Navigation */}
+        <nav className="bg-white shadow-sm border-b sticky top-0 z-10">
+          <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 className="text-xl font-bold text-gray-900">Fraud Detection</h1>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage('new-transaction')}
+                className="px-4 py-2 text-gray-600 hover:text-user-primary hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                Nueva Transacción
+              </button>
+              <button
+                onClick={() => setCurrentPage('my-transactions')}
+                className="px-4 py-2 bg-user-primary text-white rounded-lg font-medium"
+              >
+                Mis Transacciones
+              </button>
+            </div>
+          </div>
+        </nav>
+        <TransactionsPage />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Navigation */}
+      <div className="max-w-md mx-auto mb-6">
+        <div className="flex gap-2 bg-white rounded-lg shadow-sm p-2">
+          <button
+            onClick={() => setCurrentPage('new-transaction')}
+            className="flex-1 px-4 py-2 bg-user-primary text-white rounded-lg font-medium"
+          >
+            Nueva Transacción
+          </button>
+          <button
+            onClick={() => setCurrentPage('my-transactions')}
+            className="flex-1 px-4 py-2 text-gray-600 hover:text-user-primary hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            Mis Transacciones
+          </button>
+        </div>
+      </div>
+
       <div className="max-w-md mx-auto">
         {/* Header */}
         <motion.div

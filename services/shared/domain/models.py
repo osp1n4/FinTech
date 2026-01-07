@@ -126,6 +126,8 @@ class FraudEvaluation:
     status: str = ""  # Se calcula en __post_init__
     reviewed_by: Optional[str] = None
     reviewed_at: Optional[datetime] = None
+    user_authenticated: Optional[bool] = None  # Si el usuario confirmó la transacción
+    user_auth_timestamp: Optional[datetime] = None  # Cuándo el usuario autenticó
 
     def __post_init__(self) -> None:
         """
@@ -174,3 +176,18 @@ class FraudEvaluation:
         self.status = decision
         self.reviewed_by = analyst_id
         self.reviewed_at = datetime.now()
+
+    def authenticate_by_user(self, confirmed: bool) -> None:
+        """
+        El usuario confirma o rechaza la transacción (autenticación adicional)
+        
+        Args:
+            confirmed: True si el usuario confirma "Fui yo", False si "No fui yo"
+        
+        Nota:
+        Esto ayuda al analista a tomar una decisión informada.
+        Si el usuario confirma (True), probablemente es legítima.
+        Si el usuario rechaza (False), probablemente es fraude.
+        """
+        self.user_authenticated = confirmed
+        self.user_auth_timestamp = datetime.now()

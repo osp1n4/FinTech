@@ -61,6 +61,12 @@ class RuleReorderRequest(BaseModel):
     ruleIds: List[str] = Field(..., description="Ordered list of rule IDs")
 
 
+class UserAuthenticateRequest(BaseModel):
+    """DTO para autenticación de transacción por parte del usuario"""
+
+    confirmed: bool = Field(..., description="True si 'Fui yo', False si 'No fui yo'")
+
+
 # Router principal
 router = APIRouter()
 
@@ -218,9 +224,13 @@ async def review_transaction(
     para separar datos de autenticación de datos de negocio.
     """
     from starlette.concurrency import run_in_threadpool
+    from shared.application.use_cases import ReviewTransactionUseCase
     
     try:
-        review_use_case = _review_use_case_factory()
+        # Instanciar el use case correctamente
+        repository = _repository_factory()
+        review_use_case = ReviewTransactionUseCase(repository)
+        
         # Ejecutar en thread pool para no bloquear el event loop
         await run_in_threadpool(
             review_use_case.execute, transaction_id, review.decision, analyst_id
@@ -360,7 +370,9 @@ async def validate_transaction_sync(transaction: TransactionValidateRequest):
         
         return {
             "status": status_value,
+            "transactionId": transaction_data["id"],
             "riskScore": risk_score,
+            "riskLevel": risk_level,
             "violations": violations
         }
     except ValueError as e:
@@ -534,7 +546,10 @@ async def get_transactions_log(
                 "status": frontend_status,
                 "violations": e.reasons,
                 "riskLevel": e.risk_level.name,
-                "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else "N/A"
+                "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else "N/A",
+                "userAuthenticated": e.user_authenticated,
+                "reviewedBy": e.reviewed_by,
+                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None
             })
         
         return result
@@ -623,3 +638,102 @@ async def reorder_rules(
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reordering rules: {str(e)}")
+
+# ============================================================================
+# ENDPOINTS PARA USUARIO
+# ============================================================================
+
+@api_v1_router.get("/user/transactions/{user_id}")
+async def get_user_transactions(
+    user_id: str,
+    limit: int = Query(50, gt=0, le=100, description="Máximo de transacciones a retornar")
+):
+    """
+    Obtiene todas las transacciones de un usuario específico
+    
+    Permite al usuario ver:
+    - Historial de sus transacciones
+    - Estado actual (APPROVED, SUSPICIOUS, REJECTED)
+    - Si necesita autenticar alguna transacción sospechosa
+    """
+    from starlette.concurrency import run_in_threadpool
+    
+    try:
+        repository = _repository_factory()
+        # Ejecutar en thread pool ya que es síncrono
+        evaluations = await run_in_threadpool(
+            repository.get_evaluations_by_user, user_id
+        )
+        
+        # Limitar resultados
+        evaluations = evaluations[:limit]
+        
+        return [
+            {
+                "id": e.transaction_id,
+                "amount": float(e.amount) if e.amount else None,
+                "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else None,
+                "timestamp": e.timestamp.isoformat(),
+                "status": e.status,
+                "riskScore": e.risk_level.value,
+                "violations": e.reasons,
+                "needsAuthentication": e.status == "PENDING_REVIEW" and e.user_authenticated is None,
+                "userAuthenticated": e.user_authenticated,
+                "reviewedBy": e.reviewed_by,
+                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None
+            }
+            for e in evaluations
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving transactions: {str(e)}")
+
+
+@api_v1_router.post("/user/transaction/{transaction_id}/authenticate")
+async def authenticate_transaction(
+    transaction_id: str,
+    auth: UserAuthenticateRequest
+):
+    """
+    Permite al usuario autenticar una transacción sospechosa
+    
+    El usuario confirma si la transacción fue realizada por él:
+    - confirmed=True: "Fui yo" → Ayuda al analista a aprobarla
+    - confirmed=False: "No fui yo" → Indica posible fraude
+    """
+    from starlette.concurrency import run_in_threadpool
+    
+    try:
+        repository = _repository_factory()
+        
+        # Obtener la evaluación
+        evaluation = await run_in_threadpool(
+            repository.get_evaluation_by_id, transaction_id
+        )
+        
+        if evaluation is None:
+            raise HTTPException(status_code=404, detail=f"Transaction {transaction_id} not found")
+        
+        # Solo se puede autenticar transacciones en estado PENDING_REVIEW (SUSPICIOUS)
+        if evaluation.status != "PENDING_REVIEW":
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Transaction is {evaluation.status}, cannot authenticate"
+            )
+        
+        # Aplicar autenticación del usuario
+        evaluation.authenticate_by_user(auth.confirmed)
+        
+        # Guardar en BD
+        await run_in_threadpool(repository.update_evaluation, evaluation)
+        
+        return {
+            "status": "authenticated",
+            "transaction_id": transaction_id,
+            "confirmed": auth.confirmed,
+            "message": "Gracias por confirmar. Un analista revisará tu transacción pronto." if auth.confirmed 
+                      else "Gracias por alertarnos. Bloquearemos esta transacción."
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error authenticating transaction: {str(e)}")

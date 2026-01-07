@@ -87,9 +87,11 @@ export default function TransactionsPage() {
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">ID</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Monto</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Usuario</th>
+                  <th className="text-left py-4 px-6 text-gray-400 font-medium">Usuario</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Ubicación</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Fecha/Hora</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Estado</th>
+                  <th className="text-left py-4 px-6 text-gray-400 font-medium">Autenticación</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Violaciones</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Acciones</th>
                 </tr>
@@ -124,6 +126,26 @@ export default function TransactionsPage() {
                         {' '}
                         {tx.status}
                       </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      {tx.userAuthenticated === true && (
+                        <span className="px-2 py-1 bg-blue-900 text-blue-300 rounded-full text-xs font-semibold">
+                          ✓ Usuario confirmó
+                        </span>
+                      )}
+                      {tx.userAuthenticated === false && (
+                        <span className="px-2 py-1 bg-red-900 text-red-300 rounded-full text-xs font-semibold">
+                          ✗ Usuario negó
+                        </span>
+                      )}
+                      {tx.userAuthenticated === null && tx.status === 'SUSPICIOUS' && (
+                        <span className="px-2 py-1 bg-gray-700 text-gray-400 rounded-full text-xs">
+                          ⏳ Pendiente
+                        </span>
+                      )}
+                      {tx.status !== 'SUSPICIOUS' && tx.userAuthenticated === null && (
+                        <span className="text-gray-500 text-xs">-</span>
+                      )}
                     </td>
                     <td className="py-4 px-6 text-sm">
                       {tx.violations.length > 0 ? (
