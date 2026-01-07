@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: fraud-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: fraud2026
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - fraud-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: fraud-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - fraud-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: fraud-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: fraud
+      RABBITMQ_DEFAULT_PASS: fraud2026
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - fraud-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: fraud-api
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fraud-network
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker-service/Dockerfile
+    container_name: fraud-worker
+    environment:
+      MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fraud-network
+
+  frontend:
+    build:
+      context: ./frontend/streamlit
+      dockerfile: Dockerfile
+    container_name: fraud-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      API_URL: http://host.docker.internal:8000
+    networks:
+      - fraud-network
+    depends_on:
+      - api
+
+volumes:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  fraud-network:
+    driver: bridge

@@ -1,0 +1,231 @@
+version: '3.8'
+
+# 🏗️ Arquitectura de Microservicios - Fraud Detection Engine
+# Cada servicio está separado y puede escalarse independientemente
+
+networks:
+  backend-network:
+    driver: bridge
+  data-network:
+    driver: bridge
+  frontend-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
+
+services:
+  # ═══════════════════════════════════════════════════════════
+  # 🗄️ INFRAESTRUCTURA - Bases de Datos y Mensajería
+  # ═══════════════════════════════════════════════════════════
+  
+  mongodb:
+    image: mongo:7.0
+    container_name: fraud-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: fraud2026
+      MONGO_INITDB_DATABASE: fraud_detection
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - data-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: fraud-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass fraud2026
+    volumes:
+      - redis_data:/data
+    networks:
+      - data-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: fraud-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: fraud
+      RABBITMQ_DEFAULT_PASS: fraud2026
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend-network
+      - data-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════
+  # 🔷 MICROSERVICIOS - Backend
+  # ═══════════════════════════════════════════════════════════
+
+  # API Gateway - Punto de entrada principal
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: fraud-api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      SERVICE_NAME: api-gateway
+      MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
+      MONGODB_DATABASE: fraud_detection
+      REDIS_URL: redis://:fraud2026@redis:6379
+      RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+      FRAUD_EVALUATION_SERVICE_URL: http://fraud-evaluation-service:8001
+      LOG_LEVEL: INFO
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend-network
+      - frontend-network
+      - data-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Fraud Evaluation Service - Lógica de evaluación
+  fraud-evaluation-service:
+    build:
+      context: .
+      dockerfile: services/fraud-evaluation-service/Dockerfile
+    container_name: fraud-evaluation-service
+    ports:
+      - "8001:8001"
+    environment:
+      SERVICE_NAME: fraud-evaluation-service
+      REDIS_URL: redis://:fraud2026@redis:6379
+      AMOUNT_THRESHOLD: 1500.0
+      LOCATION_RADIUS_KM: 100.0
+      LOG_LEVEL: INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-network
+      - data-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    # Escalable horizontalmente
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Worker Service - Procesamiento asíncrono
+  worker-service:
+    build:
+      context: .
+      dockerfile: services/worker-service/Dockerfile
+    container_name: fraud-worker-service
+    environment:
+      SERVICE_NAME: worker-service
+      MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
+      MONGODB_DATABASE: fraud_detection
+      REDIS_URL: redis://:fraud2026@redis:6379
+      RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+      RABBITMQ_QUEUE: fraud_evaluations
+      FRAUD_EVALUATION_SERVICE_URL: http://fraud-evaluation-service:8001
+      LOG_LEVEL: INFO
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      fraud-evaluation-service:
+        condition: service_healthy
+    networks:
+      - backend-network
+      - data-network
+    restart: unless-stopped
+    # Escalable horizontalmente
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ═══════════════════════════════════════════════════════════
+  # 🎨 FRONTEND
+  # ═══════════════════════════════════════════════════════════
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: fraud-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - frontend-network
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════
+  # 📊 OBSERVABILIDAD (Opcional - para producción)
+  # ═══════════════════════════════════════════════════════════
+
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: fraud-prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   networks:
+  #     - backend-network
+
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: fraud-grafana
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #   networks:
+  #     - backend-network
