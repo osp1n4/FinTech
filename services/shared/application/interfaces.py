@@ -14,7 +14,7 @@ y evitar que los adaptadores implementen métodos innecesarios.
 """
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from shared.domain.models import FraudEvaluation
+from services.shared.domain.models import FraudEvaluation
 
 
 class TransactionRepository(ABC):

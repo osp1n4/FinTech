@@ -15,9 +15,9 @@ para cumplir con Single Responsibility y Command Query Separation (CQS).
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Dict, Any, Optional
-from shared.domain.models import Transaction, FraudEvaluation, Location, RiskLevel
-from shared.domain.strategies.base import FraudStrategy
-from shared.application.interfaces import (
+from services.shared.domain.models import Transaction, FraudEvaluation, Location, RiskLevel
+from services.shared.domain.strategies.base import FraudStrategy
+from services.shared.application.interfaces import (
     TransactionRepository,
     MessagePublisher,
     CacheService,
@@ -227,7 +227,7 @@ class ReviewTransactionUseCase:
         """
         self.repository = repository
 
-    async def execute(
+    def execute(
         self, transaction_id: str, decision: str, analyst_id: str
     ) -> None:
         """
@@ -246,7 +246,7 @@ class ReviewTransactionUseCase:
         para cumplir con Command Query Separation: este es un comando, no una query.
         """
         # 1. Obtener evaluación existente
-        evaluation = await self.repository.get_evaluation_by_id(transaction_id)
+        evaluation = self.repository.get_evaluation_by_id(transaction_id)
 
         if evaluation is None:
             raise ValueError(f"Transaction {transaction_id} not found")
@@ -255,4 +255,4 @@ class ReviewTransactionUseCase:
         evaluation.apply_manual_decision(decision, analyst_id)
 
         # 3. Persistir actualización
-        await self.repository.update_evaluation(evaluation)
+        self.repository.update_evaluation(evaluation)

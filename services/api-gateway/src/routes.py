@@ -61,6 +61,12 @@ class RuleReorderRequest(BaseModel):
     ruleIds: List[str] = Field(..., description="Ordered list of rule IDs")
 
 
+class UserAuthenticateRequest(BaseModel):
+    """DTO para autenticación de transacción por parte del usuario"""
+
+    confirmed: bool = Field(..., description="True si 'Fui yo', False si 'No fui yo'")
+
+
 # Router principal
 router = APIRouter()
 
@@ -217,9 +223,18 @@ async def review_transaction(
     La IA sugirió recibir analyst_id en el body. Lo moví a un header
     para separar datos de autenticación de datos de negocio.
     """
+    from starlette.concurrency import run_in_threadpool
+    from shared.application.use_cases import ReviewTransactionUseCase
+    
     try:
-        review_use_case = _review_use_case_factory()
-        await review_use_case.execute(transaction_id, review.decision, analyst_id)
+        # Instanciar el use case correctamente
+        repository = _repository_factory()
+        review_use_case = ReviewTransactionUseCase(repository)
+        
+        # Ejecutar en thread pool para no bloquear el event loop
+        await run_in_threadpool(
+            review_use_case.execute, transaction_id, review.decision, analyst_id
+        )
         return {"status": "reviewed", "decision": review.decision}
     except ValueError as e:
         if "not found" in str(e).lower():
@@ -308,24 +323,38 @@ async def validate_transaction_sync(transaction: TransactionValidateRequest):
         
         evaluate_use_case = EvaluateTransactionUseCase(repository, publisher, cache, strategies)
         
-        # Convertir location string a coordenadas (formato esperado: "Ciudad, País" con coordenadas mock)
-        # Para simplificar, usar coordenadas de ciudades comunes
-        location_coords = {
-            "New York": {"latitude": 40.7128, "longitude": -74.0060},
-            "Los Angeles": {"latitude": 34.0522, "longitude": -118.2437},
-            "Chicago": {"latitude": 41.8781, "longitude": -87.6298},
-            "Miami": {"latitude": 25.7617, "longitude": -80.1918},
-            "San Francisco": {"latitude": 37.7749, "longitude": -122.4194}
-        }
+        # Convertir location string a coordenadas
+        # Formato esperado: "lat,lon" (ej: "4.6097,-74.0817") o "Ciudad, País"
+        location_str = transaction.location.strip()
         
-        location_parts = transaction.location.split(", ")
-        city = location_parts[0] if len(location_parts) > 0 else "Unknown"
-        coords = location_coords.get(city, {"latitude": 40.7128, "longitude": -74.0060})
-        
-        location_dict = {
-            "latitude": coords["latitude"],
-            "longitude": coords["longitude"]
-        }
+        # Verificar si ya son coordenadas (formato: "lat,lon")
+        if ',' in location_str and len(location_str.split(',')) == 2:
+            try:
+                parts = location_str.split(',')
+                lat = float(parts[0].strip())
+                lon = float(parts[1].strip())
+                location_dict = {
+                    "latitude": lat,
+                    "longitude": lon
+                }
+            except ValueError:
+                # Si falla el parseo, usar coordenadas por defecto
+                location_dict = {"latitude": 40.7128, "longitude": -74.0060}
+        else:
+            # Mapeo de ciudades a coordenadas (fallback)
+            location_coords = {
+                "New York": {"latitude": 40.7128, "longitude": -74.0060},
+                "Los Angeles": {"latitude": 34.0522, "longitude": -118.2437},
+                "Chicago": {"latitude": 41.8781, "longitude": -87.6298},
+                "Miami": {"latitude": 25.7617, "longitude": -80.1918},
+                "San Francisco": {"latitude": 37.7749, "longitude": -122.4194},
+                "Bogota": {"latitude": 4.6097, "longitude": -74.0817},
+                "Medellin": {"latitude": 6.2442, "longitude": -75.5812},
+                "Cali": {"latitude": 3.4516, "longitude": -76.5320}
+            }
+            
+            city = location_str.split(",")[0].strip()
+            location_dict = location_coords.get(city, {"latitude": 40.7128, "longitude": -74.0060})
         
         # Preparar payload
         transaction_data = {
@@ -355,7 +384,9 @@ async def validate_transaction_sync(transaction: TransactionValidateRequest):
         
         return {
             "status": status_value,
+            "transactionId": transaction_data["id"],
             "riskScore": risk_score,
+            "riskLevel": risk_level,
             "violations": violations
         }
     except ValueError as e:
@@ -382,8 +413,8 @@ async def get_rules():
         amount_threshold = config.get("amount_threshold", settings.amount_threshold) if config else settings.amount_threshold
         location_radius = config.get("location_radius_km", settings.location_radius_km) if config else settings.location_radius_km
         
-        # Definir reglas (en producción, cargar desde BD)
-        rules = [
+        # Definir reglas predeterminadas
+        default_rules = [
             {
                 "id": "rule_amount_threshold",
                 "name": "RuleMontoAlto",
@@ -406,7 +437,29 @@ async def get_rules():
             }
         ]
         
-        return rules
+        # Obtener reglas personalizadas de MongoDB
+        custom_rules = []
+        try:
+            repository = _repository_factory()
+            if hasattr(repository, 'db'):
+                cursor = repository.db.custom_rules.find({"enabled": True})
+                for rule_doc in cursor:
+                    custom_rules.append({
+                        "id": rule_doc["id"],
+                        "name": rule_doc["name"],
+                        "type": rule_doc["type"],
+                        "parameters": rule_doc["parameters"],
+                        "enabled": rule_doc["enabled"],
+                        "order": rule_doc["order"]
+                    })
+        except Exception as e:
+            print(f"Error loading custom rules: {e}")
+        
+        # Combinar y ordenar por prioridad
+        all_rules = default_rules + custom_rules
+        all_rules.sort(key=lambda x: x["order"])
+        
+        return all_rules
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching rules: {str(e)}")
 
@@ -529,7 +582,10 @@ async def get_transactions_log(
                 "status": frontend_status,
                 "violations": e.reasons,
                 "riskLevel": e.risk_level.name,
-                "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else "N/A"
+                "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else "N/A",
+                "userAuthenticated": e.user_authenticated,
+                "reviewedBy": e.reviewed_by,
+                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None
             })
         
         return result
@@ -561,7 +617,7 @@ async def get_metrics():
         
         total = len(evaluations)
         blocked = sum(1 for e in evaluations if e.status == "REJECTED")
-        suspicious = sum(1 for e in evaluations if e.status == "SUSPICIOUS")
+        suspicious = sum(1 for e in evaluations if e.status in ["SUSPICIOUS", "PENDING_REVIEW"])
         
         # Calcular risk score promedio (simplificado)
         risk_scores = []
@@ -583,6 +639,159 @@ async def get_metrics():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching metrics: {str(e)}")
+
+
+@api_v1_router.get("/admin/trends")
+async def get_trends():
+    """
+    Tendencias de transacciones de las últimas 24h agrupadas por hora
+    
+    Retorna conteos de transacciones aprobadas, sospechosas y rechazadas
+    por cada hora, permitiendo visualizar patrones temporales.
+    """
+    from datetime import timedelta
+    from collections import defaultdict
+    
+    try:
+        repository = _repository_factory()
+        
+        # Obtener todas las evaluaciones
+        evaluations = await repository.get_all_evaluations()
+        
+        if not evaluations:
+            # Retornar 24 horas con valores en 0
+            return [
+                {"time": f"{h:02d}:00", "approved": 0, "suspicious": 0, "rejected": 0}
+                for h in range(24)
+            ]
+        
+        # Filtrar evaluaciones de las últimas 24h
+        now = datetime.now()
+        last_24h = now - timedelta(hours=24)
+        recent_evaluations = [e for e in evaluations if e.timestamp >= last_24h]
+        
+        # Agrupar por hora
+        hourly_data = defaultdict(lambda: {"approved": 0, "suspicious": 0, "rejected": 0})
+        
+        for e in recent_evaluations:
+            hour = e.timestamp.strftime("%H:00")
+            
+            if e.status == "APPROVED":
+                hourly_data[hour]["approved"] += 1
+            elif e.status in ["PENDING_REVIEW", "SUSPICIOUS"]:
+                hourly_data[hour]["suspicious"] += 1
+            elif e.status == "REJECTED":
+                hourly_data[hour]["rejected"] += 1
+        
+        # Generar resultado para todas las 24 horas
+        result = []
+        for h in range(24):
+            time_key = f"{h:02d}:00"
+            result.append({
+                "time": time_key,
+                "approved": hourly_data[time_key]["approved"],
+                "suspicious": hourly_data[time_key]["suspicious"],
+                "rejected": hourly_data[time_key]["rejected"]
+            })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching trends: {str(e)}")
+
+
+@api_v1_router.post("/admin/rules")
+async def create_rule(
+    rule: dict,
+    analyst_id: str = Header(..., alias="X-Analyst-ID")
+):
+    """
+    Crea una nueva regla personalizada
+    
+    Permite a los analistas crear reglas de fraude personalizadas
+    sin necesidad de modificar el código.
+    """
+    try:
+        # Validar datos requeridos
+        if "name" not in rule or "type" not in rule or "parameters" not in rule:
+            raise ValueError("Missing required fields: name, type, parameters")
+        
+        # Generar ID único para la regla
+        import uuid
+        from datetime import datetime
+        rule_id = f"rule_{uuid.uuid4().hex[:8]}"
+        
+        # Preparar documento para MongoDB
+        rule_doc = {
+            "id": rule_id,
+            "name": rule["name"],
+            "type": rule["type"],
+            "parameters": rule["parameters"],
+            "enabled": rule.get("enabled", True),
+            "order": rule.get("order", 999),
+            "created_by": analyst_id,
+            "created_at": datetime.now(),
+            "updated_at": datetime.now()
+        }
+        
+        # Guardar en MongoDB
+        repository = _repository_factory()
+        if hasattr(repository, 'db'):
+            repository.db.custom_rules.insert_one(rule_doc)
+        
+        return {
+            "success": True,
+            "message": "Rule created successfully",
+            "rule": {
+                "id": rule_id,
+                "name": rule["name"],
+                "type": rule["type"],
+                "parameters": rule["parameters"],
+                "enabled": rule.get("enabled", True),
+                "order": rule.get("order", 999)
+            },
+            "created_by": analyst_id
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating rule: {str(e)}")
+
+
+@api_v1_router.delete("/admin/rules/{rule_id}")
+async def delete_rule(
+    rule_id: str,
+    analyst_id: str = Header(..., alias="X-Analyst-ID")
+):
+    """
+    Elimina una regla personalizada
+    
+    Solo se pueden eliminar reglas personalizadas, no las predeterminadas.
+    """
+    try:
+        # No permitir eliminar reglas predeterminadas
+        if rule_id in ["rule_amount_threshold", "rule_location_check"]:
+            raise HTTPException(
+                status_code=403, 
+                detail="Cannot delete default rules"
+            )
+        
+        # Eliminar de MongoDB
+        repository = _repository_factory()
+        if hasattr(repository, 'db'):
+            result = repository.db.custom_rules.delete_one({"id": rule_id})
+            
+            if result.deleted_count == 0:
+                raise HTTPException(status_code=404, detail="Rule not found")
+        
+        return {
+            "success": True,
+            "message": "Rule deleted successfully",
+            "deleted_by": analyst_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting rule: {str(e)}")
 
 
 @api_v1_router.post("/admin/rules/reorder")
@@ -618,3 +827,103 @@ async def reorder_rules(
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reordering rules: {str(e)}")
+
+# ============================================================================
+# ENDPOINTS PARA USUARIO
+# ============================================================================
+
+@api_v1_router.get("/user/transactions/{user_id}")
+async def get_user_transactions(
+    user_id: str,
+    limit: int = Query(50, gt=0, le=100, description="Máximo de transacciones a retornar")
+):
+    """
+    Obtiene todas las transacciones de un usuario específico
+    
+    Permite al usuario ver:
+    - Historial de sus transacciones
+    - Estado actual (APPROVED, SUSPICIOUS, REJECTED)
+    - Si necesita autenticar alguna transacción sospechosa
+    """
+    from starlette.concurrency import run_in_threadpool
+    
+    try:
+        repository = _repository_factory()
+        # Ejecutar en thread pool ya que es síncrono
+        evaluations = await run_in_threadpool(
+            repository.get_evaluations_by_user, user_id
+        )
+        
+        # Limitar resultados
+        evaluations = evaluations[:limit]
+        
+        return [
+            {
+                "id": e.transaction_id,
+                "userId": e.user_id,
+                "amount": float(e.amount) if e.amount else None,
+                "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else None,
+                "timestamp": e.timestamp.isoformat(),
+                "status": e.status,
+                "riskScore": e.risk_level.value,
+                "violations": e.reasons,
+                "needsAuthentication": e.status == "PENDING_REVIEW" and e.user_authenticated is None,
+                "userAuthenticated": e.user_authenticated,
+                "reviewedBy": e.reviewed_by,
+                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None
+            }
+            for e in evaluations
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving transactions: {str(e)}")
+
+
+@api_v1_router.post("/user/transaction/{transaction_id}/authenticate")
+async def authenticate_transaction(
+    transaction_id: str,
+    auth: UserAuthenticateRequest
+):
+    """
+    Permite al usuario autenticar una transacción sospechosa
+    
+    El usuario confirma si la transacción fue realizada por él:
+    - confirmed=True: "Fui yo" → Ayuda al analista a aprobarla
+    - confirmed=False: "No fui yo" → Indica posible fraude
+    """
+    from starlette.concurrency import run_in_threadpool
+    
+    try:
+        repository = _repository_factory()
+        
+        # Obtener la evaluación
+        evaluation = await run_in_threadpool(
+            repository.get_evaluation_by_id, transaction_id
+        )
+        
+        if evaluation is None:
+            raise HTTPException(status_code=404, detail=f"Transaction {transaction_id} not found")
+        
+        # Solo se puede autenticar transacciones en estado PENDING_REVIEW (SUSPICIOUS)
+        if evaluation.status != "PENDING_REVIEW":
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Transaction is {evaluation.status}, cannot authenticate"
+            )
+        
+        # Aplicar autenticación del usuario
+        evaluation.authenticate_by_user(auth.confirmed)
+        
+        # Guardar en BD
+        await run_in_threadpool(repository.update_evaluation, evaluation)
+        
+        return {
+            "status": "authenticated",
+            "transaction_id": transaction_id,
+            "confirmed": auth.confirmed,
+            "message": "Gracias por confirmar. Un analista revisará tu transacción pronto." if auth.confirmed 
+                      else "Gracias por alertarnos. Bloquearemos esta transacción."
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error authenticating transaction: {str(e)}")

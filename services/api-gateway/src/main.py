@@ -60,7 +60,7 @@ def get_strategies():
     """
     Factory para estrategias de fraude
     
-    Nota del desarrollador:
+    Nota:
     La IA sugirió hardcodear las estrategias. Las cargo dinámicamente
     desde configuración para permitir modificación sin redespliegue (HU-008).
     """

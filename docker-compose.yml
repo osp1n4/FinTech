@@ -1,3 +1,7 @@
+# HUMAN REVIEW (Maria Paula Gutierrez):
+# La IA configuró servicios sin verificar si estaban listos.
+# Agregué health checks para que los servicios esperen
+# a que la base de datos esté lista antes de conectarse.
 version: '3.8'
 
 services:

@@ -1,3 +1,9 @@
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA cargaba datos sin mostrar estado de carga.
+ * Agregué estados de loading/error para que el usuario
+ * sepa qué está pasando mientras se cargan los datos.
+ */
 import { useEffect, useState } from 'react';
 import { getMetrics, getTransactionsLog } from '@/services/api';
 import type { Metrics, Transaction } from '@/types';

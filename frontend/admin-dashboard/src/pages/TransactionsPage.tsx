@@ -24,14 +24,26 @@ export default function TransactionsPage() {
   };
 
   const handleReview = async (transactionId: string, decision: 'APPROVED' | 'REJECTED') => {
+    console.log('🔵 handleReview llamado:', { transactionId, decision });
     try {
-      await reviewTransaction(transactionId, decision);
+      console.log('🔵 Llamando a reviewTransaction...');
+      const result = await reviewTransaction(transactionId, decision);
+      console.log('✅ reviewTransaction exitoso:', result);
+      
       // Recargar transacciones para reflejar el cambio
+      console.log('🔵 Recargando transacciones...');
       await loadTransactions();
+      console.log('✅ Transacciones recargadas');
+      
       alert(`Transacción ${decision === 'APPROVED' ? 'aprobada' : 'rechazada'} exitosamente`);
-    } catch (error) {
-      console.error('Error reviewing transaction:', error);
-      alert('Error al revisar la transacción');
+    } catch (error: any) {
+      console.error('❌ Error reviewing transaction:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      alert(`Error al revisar la transacción: ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -78,6 +90,7 @@ export default function TransactionsPage() {
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Ubicación</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Fecha/Hora</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Estado</th>
+                  <th className="text-left py-4 px-6 text-gray-400 font-medium">Autenticación</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Violaciones</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Acciones</th>
                 </tr>
@@ -112,6 +125,26 @@ export default function TransactionsPage() {
                         {' '}
                         {tx.status}
                       </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      {tx.userAuthenticated === true && (
+                        <span className="px-2 py-1 bg-blue-900 text-blue-300 rounded-full text-xs font-semibold">
+                          ✓ Usuario confirmó
+                        </span>
+                      )}
+                      {tx.userAuthenticated === false && (
+                        <span className="px-2 py-1 bg-red-900 text-red-300 rounded-full text-xs font-semibold">
+                          ✗ Usuario negó
+                        </span>
+                      )}
+                      {tx.userAuthenticated === null && tx.status === 'SUSPICIOUS' && (
+                        <span className="px-2 py-1 bg-gray-700 text-gray-400 rounded-full text-xs">
+                          ⏳ Pendiente
+                        </span>
+                      )}
+                      {tx.status !== 'SUSPICIOUS' && tx.userAuthenticated === null && (
+                        <span className="text-gray-500 text-xs">-</span>
+                      )}
                     </td>
                     <td className="py-4 px-6 text-sm">
                       {tx.violations.length > 0 ? (

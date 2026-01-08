@@ -1,3 +1,7 @@
+# HUMAN REVIEW (Maria Paula Gutierrez):
+# La IA sugirió usar pip normal.
+# Elegí Poetry porque maneja mejor las versiones de librerías
+# y evita problemas de compatibilidad.
 [tool.poetry]
 name = "fraud-detection-engine"
 version = "0.1.0"
@@ -35,13 +39,30 @@ requests = "^2.31.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+# HUMAN REVIEW (Maria Paula Gutierrez):
+# Configuré pytest para ejecutar tests unitarios y de integración.
+# El coverage mínimo es 70% para asegurar calidad del código.
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=src --cov-report=html --cov-report=term-missing --cov-fail-under=70 -v"
+addopts = """
+    --cov=services
+    --cov-report=html
+    --cov-report=term-missing
+    --cov-report=xml
+    --cov-fail-under=70
+    -v
+    --strict-markers
+    --tb=short
+"""
 asyncio_mode = "auto"
+markers = [
+    "unit: Tests unitarios para Domain y Application",
+    "integration: Tests de integración con API endpoints",
+    "slow: Tests que tardan más de 1 segundo",
+]
 
 [tool.black]
 line-length = 100

@@ -1,17 +1,43 @@
-import React from 'react';
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA usó datos falsos (mock) en el gráfico.
+ * Lo cambié para mostrar datos reales del servidor
+ * porque los datos falsos no coincidían con las estadísticas.
+ */
+import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getTrends } from '@/services/api';
+import type { TrendData } from '@/types';
 
 const TrendChart: React.FC = () => {
-  // Mock data - en producción, obtener del backend
-  const data = [
-    { time: '00:00', approved: 120, suspicious: 30, rejected: 10 },
-    { time: '04:00', approved: 90, suspicious: 25, rejected: 8 },
-    { time: '08:00', approved: 180, suspicious: 40, rejected: 15 },
-    { time: '12:00', approved: 250, suspicious: 60, rejected: 25 },
-    { time: '16:00', approved: 200, suspicious: 45, rejected: 18 },
-    { time: '20:00', approved: 150, suspicious: 35, rejected: 12 },
-    { time: '24:00', approved: 100, suspicious: 28, rejected: 10 },
-  ];
+  const [data, setData] = useState<TrendData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTrends();
+  }, []);
+
+  const loadTrends = async () => {
+    try {
+      const trends = await getTrends();
+      setData(trends);
+    } catch (error) {
+      console.error('Error loading trends:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-admin-surface rounded-xl p-6">
+        <h2 className="text-xl font-bold mb-6">Tendencia de Transacciones (Últimas 24h)</h2>
+        <div className="flex items-center justify-center h-[300px]">
+          <div className="text-gray-400">Cargando tendencias...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-admin-surface rounded-xl p-6">

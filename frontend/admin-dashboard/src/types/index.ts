@@ -1,3 +1,9 @@
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA usó 'any' en todas partes.
+ * Definí tipos específicos para evitar errores y
+ * que el código sea más claro.
+ */
 export interface Rule {
   id: string;
   name: string;
@@ -16,6 +22,9 @@ export interface Transaction {
   violations: string[];
   riskLevel: string;
   location?: string;
+  userAuthenticated?: boolean | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
 }
 
 export interface Metrics {
@@ -23,4 +32,11 @@ export interface Metrics {
   blockedRate: number;
   suspiciousRate: number;
   avgRiskScore: number;
+}
+
+export interface TrendData {
+  time: string;
+  approved: number;
+  suspicious: number;
+  rejected: number;
 }
