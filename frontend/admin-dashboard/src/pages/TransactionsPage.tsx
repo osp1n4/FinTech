@@ -87,7 +87,6 @@ export default function TransactionsPage() {
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">ID</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Monto</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Usuario</th>
-                  <th className="text-left py-4 px-6 text-gray-400 font-medium">Usuario</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Ubicación</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Fecha/Hora</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Estado</th>

@@ -27,3 +27,10 @@ export interface Metrics {
   suspiciousRate: number;
   avgRiskScore: number;
 }
+
+export interface TrendData {
+  time: string;
+  approved: number;
+  suspicious: number;
+  rejected: number;
+}

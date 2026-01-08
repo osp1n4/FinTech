@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '../components/ui/Card';
 import { getUserTransactions, authenticateTransaction } from '../services/api';
+import { useUser } from '../context/UserContext';
 
 interface Transaction {
   id: string;
@@ -23,8 +24,8 @@ export function TransactionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [authenticating, setAuthenticating] = useState<string | null>(null);
 
-  // Por ahora usamos un userId fijo, en producción vendría de sesión/auth
-  const userId = 'user_demo';
+  // Obtener userId del contexto
+  const { userId } = useUser();
 
   const loadTransactions = async () => {
     try {
@@ -42,7 +43,7 @@ export function TransactionsPage() {
 
   useEffect(() => {
     loadTransactions();
-  }, []);
+  }, [userId]); // Recargar cuando cambie el userId
 
   const handleAuthenticate = async (transactionId: string, confirmed: boolean) => {
     try {

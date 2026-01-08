@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { LocationInput } from './LocationInput';
 import { generateDeviceId } from '@/utils/formatters';
+import { useUser } from '@/context/UserContext';
 import type { TransactionRequest } from '@/types/transaction';
 
 interface TransactionFormProps {
@@ -14,14 +15,28 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const { userId, setUserId } = useUser();
+  
+  // Generar deviceId específico para este usuario
+  const deviceId = React.useMemo(() => generateDeviceId(userId), [userId]);
+  
   const [formData, setFormData] = useState<TransactionRequest>({
     amount: 0,
-    userId: 'user_demo', // Usuario fijo para pruebas (en producción vendría de sesión/auth)
+    userId: userId,
     location: '', // Vacío para que el usuario ingrese o use GPS
-    deviceId: generateDeviceId(),
+    deviceId: deviceId,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TransactionRequest, string>>>({});
+
+  // Actualizar formData cuando cambie el userId o deviceId del contexto
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      userId: userId,
+      deviceId: deviceId,
+    }));
+  }, [userId, deviceId]);
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof TransactionRequest, string>> = {};
@@ -56,9 +71,16 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const handleChange = (field: keyof TransactionRequest) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    const value = field === 'amount' ? parseFloat(e.target.value) || 0 : e.target.value;
+    
+    // Si cambia el userId, actualizar el contexto
+    if (field === 'userId') {
+      setUserId(value as string);
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [field]: field === 'amount' ? parseFloat(e.target.value) || 0 : e.target.value,
+      [field]: value,
     }));
     // Limpiar error al editar
     if (errors[field]) {

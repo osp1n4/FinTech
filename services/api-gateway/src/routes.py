@@ -413,8 +413,8 @@ async def get_rules():
         amount_threshold = config.get("amount_threshold", settings.amount_threshold) if config else settings.amount_threshold
         location_radius = config.get("location_radius_km", settings.location_radius_km) if config else settings.location_radius_km
         
-        # Definir reglas (en producción, cargar desde BD)
-        rules = [
+        # Definir reglas predeterminadas
+        default_rules = [
             {
                 "id": "rule_amount_threshold",
                 "name": "RuleMontoAlto",
@@ -437,7 +437,29 @@ async def get_rules():
             }
         ]
         
-        return rules
+        # Obtener reglas personalizadas de MongoDB
+        custom_rules = []
+        try:
+            repository = _repository_factory()
+            if hasattr(repository, 'db'):
+                cursor = repository.db.custom_rules.find({"enabled": True})
+                for rule_doc in cursor:
+                    custom_rules.append({
+                        "id": rule_doc["id"],
+                        "name": rule_doc["name"],
+                        "type": rule_doc["type"],
+                        "parameters": rule_doc["parameters"],
+                        "enabled": rule_doc["enabled"],
+                        "order": rule_doc["order"]
+                    })
+        except Exception as e:
+            print(f"Error loading custom rules: {e}")
+        
+        # Combinar y ordenar por prioridad
+        all_rules = default_rules + custom_rules
+        all_rules.sort(key=lambda x: x["order"])
+        
+        return all_rules
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching rules: {str(e)}")
 
@@ -595,7 +617,7 @@ async def get_metrics():
         
         total = len(evaluations)
         blocked = sum(1 for e in evaluations if e.status == "REJECTED")
-        suspicious = sum(1 for e in evaluations if e.status == "SUSPICIOUS")
+        suspicious = sum(1 for e in evaluations if e.status in ["SUSPICIOUS", "PENDING_REVIEW"])
         
         # Calcular risk score promedio (simplificado)
         risk_scores = []
@@ -617,6 +639,159 @@ async def get_metrics():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching metrics: {str(e)}")
+
+
+@api_v1_router.get("/admin/trends")
+async def get_trends():
+    """
+    Tendencias de transacciones de las últimas 24h agrupadas por hora
+    
+    Retorna conteos de transacciones aprobadas, sospechosas y rechazadas
+    por cada hora, permitiendo visualizar patrones temporales.
+    """
+    from datetime import timedelta
+    from collections import defaultdict
+    
+    try:
+        repository = _repository_factory()
+        
+        # Obtener todas las evaluaciones
+        evaluations = await repository.get_all_evaluations()
+        
+        if not evaluations:
+            # Retornar 24 horas con valores en 0
+            return [
+                {"time": f"{h:02d}:00", "approved": 0, "suspicious": 0, "rejected": 0}
+                for h in range(24)
+            ]
+        
+        # Filtrar evaluaciones de las últimas 24h
+        now = datetime.now()
+        last_24h = now - timedelta(hours=24)
+        recent_evaluations = [e for e in evaluations if e.timestamp >= last_24h]
+        
+        # Agrupar por hora
+        hourly_data = defaultdict(lambda: {"approved": 0, "suspicious": 0, "rejected": 0})
+        
+        for e in recent_evaluations:
+            hour = e.timestamp.strftime("%H:00")
+            
+            if e.status == "APPROVED":
+                hourly_data[hour]["approved"] += 1
+            elif e.status in ["PENDING_REVIEW", "SUSPICIOUS"]:
+                hourly_data[hour]["suspicious"] += 1
+            elif e.status == "REJECTED":
+                hourly_data[hour]["rejected"] += 1
+        
+        # Generar resultado para todas las 24 horas
+        result = []
+        for h in range(24):
+            time_key = f"{h:02d}:00"
+            result.append({
+                "time": time_key,
+                "approved": hourly_data[time_key]["approved"],
+                "suspicious": hourly_data[time_key]["suspicious"],
+                "rejected": hourly_data[time_key]["rejected"]
+            })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching trends: {str(e)}")
+
+
+@api_v1_router.post("/admin/rules")
+async def create_rule(
+    rule: dict,
+    analyst_id: str = Header(..., alias="X-Analyst-ID")
+):
+    """
+    Crea una nueva regla personalizada
+    
+    Permite a los analistas crear reglas de fraude personalizadas
+    sin necesidad de modificar el código.
+    """
+    try:
+        # Validar datos requeridos
+        if "name" not in rule or "type" not in rule or "parameters" not in rule:
+            raise ValueError("Missing required fields: name, type, parameters")
+        
+        # Generar ID único para la regla
+        import uuid
+        from datetime import datetime
+        rule_id = f"rule_{uuid.uuid4().hex[:8]}"
+        
+        # Preparar documento para MongoDB
+        rule_doc = {
+            "id": rule_id,
+            "name": rule["name"],
+            "type": rule["type"],
+            "parameters": rule["parameters"],
+            "enabled": rule.get("enabled", True),
+            "order": rule.get("order", 999),
+            "created_by": analyst_id,
+            "created_at": datetime.now(),
+            "updated_at": datetime.now()
+        }
+        
+        # Guardar en MongoDB
+        repository = _repository_factory()
+        if hasattr(repository, 'db'):
+            repository.db.custom_rules.insert_one(rule_doc)
+        
+        return {
+            "success": True,
+            "message": "Rule created successfully",
+            "rule": {
+                "id": rule_id,
+                "name": rule["name"],
+                "type": rule["type"],
+                "parameters": rule["parameters"],
+                "enabled": rule.get("enabled", True),
+                "order": rule.get("order", 999)
+            },
+            "created_by": analyst_id
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating rule: {str(e)}")
+
+
+@api_v1_router.delete("/admin/rules/{rule_id}")
+async def delete_rule(
+    rule_id: str,
+    analyst_id: str = Header(..., alias="X-Analyst-ID")
+):
+    """
+    Elimina una regla personalizada
+    
+    Solo se pueden eliminar reglas personalizadas, no las predeterminadas.
+    """
+    try:
+        # No permitir eliminar reglas predeterminadas
+        if rule_id in ["rule_amount_threshold", "rule_location_check"]:
+            raise HTTPException(
+                status_code=403, 
+                detail="Cannot delete default rules"
+            )
+        
+        # Eliminar de MongoDB
+        repository = _repository_factory()
+        if hasattr(repository, 'db'):
+            result = repository.db.custom_rules.delete_one({"id": rule_id})
+            
+            if result.deleted_count == 0:
+                raise HTTPException(status_code=404, detail="Rule not found")
+        
+        return {
+            "success": True,
+            "message": "Rule deleted successfully",
+            "deleted_by": analyst_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting rule: {str(e)}")
 
 
 @api_v1_router.post("/admin/rules/reorder")
@@ -685,6 +860,7 @@ async def get_user_transactions(
         return [
             {
                 "id": e.transaction_id,
+                "userId": e.user_id,
                 "amount": float(e.amount) if e.amount else None,
                 "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else None,
                 "timestamp": e.timestamp.isoformat(),
