@@ -7,12 +7,16 @@ Cumple Single Responsibility: Cada endpoint tiene una responsabilidad única
 Nota del desarrollador (María Gutiérrez):
 La IA sugirió poner toda la lógica en las rutas. La moví a los casos de uso
 para cumplir con Separation of Concerns - las rutas solo manejan HTTP.
+
+Actualización: Ahora usa FraudEvaluationClient para comunicarse con
+fraud-evaluation-service vía HTTP en lugar de imports directos.
 """
 from fastapi import APIRouter, HTTPException, Header, Query, status
 from typing import List, Optional, Callable, Any, Dict
 from pydantic import BaseModel, Field
 from decimal import Decimal
 from datetime import datetime
+from src.clients.fraud_client import FraudEvaluationClient
 
 
 # DTOs para request/response
@@ -105,36 +109,22 @@ async def submit_transaction(transaction: TransactionRequest):
     Nota del desarrollador:
     La IA sugirió 200 OK. Lo cambié a 202 Accepted porque el procesamiento
     es asíncrono - esto comunica mejor la semántica al cliente.
+    
+    Actualización: Ahora usa FraudEvaluationClient para delegar
+    la evaluación al fraud-evaluation-service.
     """
     try:
-        # Instanciar directamente con las factories
-        repository = _repository_factory()
-        cache = _cache_factory()
-        publisher = _publisher_factory()
-        
-        # Crear estrategias
-        from decimal import Decimal
-        from shared.config import settings
-        from shared.domain.strategies.amount_threshold import AmountThresholdStrategy
-        from shared.domain.strategies.location_check import LocationStrategy
-        
-        strategies = [
-            AmountThresholdStrategy(Decimal(str(settings.amount_threshold))),
-            LocationStrategy(settings.location_radius_km),
-        ]
-        
-        # Crear e invocar use case
-        from shared.application.use_cases import EvaluateTransactionUseCase
-        evaluate_use_case = EvaluateTransactionUseCase(repository, publisher, cache, strategies)
-        
-        result = await evaluate_use_case.execute(transaction.model_dump())
+        client = FraudEvaluationClient()
+        result = await client.evaluate_transaction(transaction.model_dump())
         return {
             "status": "accepted",
             "transaction_id": transaction.id,
-            "risk_level": result["risk_level"],
+            "risk_level": result.get("risk_level"),
         }
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error evaluating transaction: {str(e)}")
 
 
 @router.get("/audit/all")
@@ -142,20 +132,12 @@ async def get_all_evaluations():
     """
     HU-002: Consulta todas las evaluaciones para auditoría
     """
-    repository = _repository_factory()
-    evaluations = await repository.get_all_evaluations()
-    return [
-        {
-            "transaction_id": e.transaction_id,
-            "risk_level": e.risk_level.name,
-            "reasons": e.reasons,
-            "timestamp": e.timestamp.isoformat(),
-            "status": e.status,
-            "reviewed_by": e.reviewed_by,
-            "reviewed_at": e.reviewed_at.isoformat() if e.reviewed_at else None,
-        }
-        for e in evaluations
-    ]
+    try:
+        client = FraudEvaluationClient()
+        result = await client.get_all_evaluations()
+        return result.get("evaluations", [])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting evaluations: {str(e)}")
 
 
 @router.get("/audit/transaction/{transaction_id}")
@@ -163,22 +145,14 @@ async def get_evaluation_by_id(transaction_id: str):
     """
     Consulta una evaluación específica por ID
     """
-    repository = _repository_factory()
-    evaluation = await repository.get_evaluation_by_id(transaction_id)
-    if evaluation is None:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-
-    return {
-        "transaction_id": evaluation.transaction_id,
-        "risk_level": evaluation.risk_level.name,
-        "reasons": evaluation.reasons,
-        "timestamp": evaluation.timestamp.isoformat(),
-        "status": evaluation.status,
-        "reviewed_by": evaluation.reviewed_by,
-        "reviewed_at": evaluation.reviewed_at.isoformat()
-        if evaluation.reviewed_at
-        else None,
-    }
+    try:
+        client = FraudEvaluationClient()
+        evaluation = await client.get_evaluation_by_id(transaction_id)
+        return evaluation
+    except Exception as e:
+        if "404" in str(e) or "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        raise HTTPException(status_code=500, detail=f"Error getting evaluation: {str(e)}")
 
 
 @router.get("/audit/user/{user_id}")
@@ -222,24 +196,23 @@ async def review_transaction(
     Nota del desarrollador:
     La IA sugirió recibir analyst_id en el body. Lo moví a un header
     para separar datos de autenticación de datos de negocio.
-    """
-    from starlette.concurrency import run_in_threadpool
-    from shared.application.use_cases import ReviewTransactionUseCase
     
+    Actualización: Ahora usa FraudEvaluationClient.
+    """
     try:
-        # Instanciar el use case correctamente
-        repository = _repository_factory()
-        review_use_case = ReviewTransactionUseCase(repository)
-        
-        # Ejecutar en thread pool para no bloquear el event loop
-        await run_in_threadpool(
-            review_use_case.execute, transaction_id, review.decision, analyst_id
+        client = FraudEvaluationClient()
+        result = await client.review_transaction(
+            transaction_id=transaction_id,
+            decision=review.decision,
+            analyst_id=analyst_id
         )
         return {"status": "reviewed", "decision": review.decision}
-    except ValueError as e:
-        if "not found" in str(e).lower():
+    except Exception as e:
+        if "404" in str(e) or "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
-        raise HTTPException(status_code=422, detail=str(e))
+        if "422" in str(e) or "invalid" in str(e).lower():
+            raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error reviewing transaction: {str(e)}")
 
 
 @router.get("/config/thresholds")

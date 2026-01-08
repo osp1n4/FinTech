@@ -1,16 +1,9 @@
 """
-Infrastructure - Configuración centralizada
-Manejo de variables de entorno y settings
+Infrastructure Configuration - Settings para Fraud Evaluation Service
 
 Cumple Single Responsibility: Solo gestiona configuración
-
-Nota del desarrollador (María Gutiérrez):
-La IA sugirió leer variables de entorno directamente en cada adaptador.
-Lo centralicé en un módulo de configuración usando Pydantic Settings
-para cumplir con "Don't Repeat Yourself" y facilitar testing.
 """
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -19,6 +12,10 @@ class Settings(BaseSettings):
     
     Usa Pydantic para validación automática y valores por defecto
     """
+
+    # Service
+    service_name: str = "fraud-evaluation-service"
+    service_port: int = 8001
 
     # MongoDB
     mongodb_url: str = "mongodb://admin:fraud2026@localhost:27017"
@@ -32,13 +29,6 @@ class Settings(BaseSettings):
     rabbitmq_url: str = "amqp://fraud:fraud2026@localhost:5672"
     rabbitmq_transactions_queue: str = "transactions"
     rabbitmq_manual_review_queue: str = "manual_review"
-
-    # API
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
-    
-    # Fraud Evaluation Service (HTTP client)
-    fraud_evaluation_service_url: str = "http://fraud-evaluation-service:8001"
 
     # Fraud Rules
     amount_threshold: float = 1500.0

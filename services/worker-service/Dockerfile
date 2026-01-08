@@ -16,7 +16,6 @@ RUN poetry install --only main --no-root --no-interaction --no-ansi
 
 # Copiar código de la aplicación
 COPY services/worker-service/src ./src
-COPY services/shared ./shared
 
 # Comando para ejecutar el worker
 CMD ["python", "-m", "src.worker"]

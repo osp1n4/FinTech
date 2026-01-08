@@ -1,0 +1,130 @@
+{
+  "rabbit_version": "3.12",
+  "users": [
+    {
+      "name": "fraud",
+      "password_hash": "fraud2026_hash_placeholder",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "fraud",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "queues": [
+    {
+      "name": "transactions",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 3600000,
+        "x-max-length": 10000
+      }
+    },
+    {
+      "name": "manual_review",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000,
+        "x-max-length": 5000
+      }
+    },
+    {
+      "name": "notifications",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 1800000,
+        "x-max-length": 1000
+      }
+    },
+    {
+      "name": "dead_letter",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "fraud_exchange",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "dlx_exchange",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "fraud_exchange",
+      "vhost": "/",
+      "destination": "transactions",
+      "destination_type": "queue",
+      "routing_key": "transaction.evaluate",
+      "arguments": {}
+    },
+    {
+      "source": "fraud_exchange",
+      "vhost": "/",
+      "destination": "manual_review",
+      "destination_type": "queue",
+      "routing_key": "transaction.review",
+      "arguments": {}
+    },
+    {
+      "source": "fraud_exchange",
+      "vhost": "/",
+      "destination": "notifications",
+      "destination_type": "queue",
+      "routing_key": "notification.*",
+      "arguments": {}
+    },
+    {
+      "source": "dlx_exchange",
+      "vhost": "/",
+      "destination": "dead_letter",
+      "destination_type": "queue",
+      "routing_key": "dead_letter",
+      "arguments": {}
+    }
+  ],
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "ha-all",
+      "pattern": ".*",
+      "apply-to": "all",
+      "definition": {
+        "ha-mode": "all",
+        "ha-sync-mode": "automatic"
+      },
+      "priority": 0
+    }
+  ]
+}

@@ -13,8 +13,10 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: fraud2026
+      MONGO_INITDB_DATABASE: fraud_detection
     volumes:
       - mongodb_data:/data/db
+      - ./infrastructure/databases/mongodb/init-scripts:/docker-entrypoint-initdb.d:ro
     networks:
       - fraud-network
     healthcheck:
@@ -28,9 +30,10 @@ services:
     container_name: fraud-redis
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
       - redis_data:/data
+      - ./infrastructure/cache/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     networks:
       - fraud-network
     healthcheck:
@@ -40,20 +43,47 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:3.12-management-alpine
+    image: rabbitmq:3.12-management
     container_name: fraud-rabbitmq
+    hostname: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: fraud
       RABBITMQ_DEFAULT_PASS: fraud2026
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      RABBITMQ_ERLANG_COOKIE: 'SWQOKODSQALRPCLNMEQG'
     networks:
       - fraud-network
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  fraud-evaluation-service:
+    build:
+      context: ./services/fraud-evaluation-service
+      dockerfile: Dockerfile
+    container_name: fraud-evaluation-service
+    ports:
+      - "8001:8001"
+    environment:
+      MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fraud-network
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8001/health\")' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,12 +99,15 @@ services:
       MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+      FRAUD_EVALUATION_SERVICE_URL: http://fraud-evaluation-service:8001
     depends_on:
       mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      fraud-evaluation-service:
         condition: service_healthy
     networks:
       - fraud-network
@@ -88,12 +121,15 @@ services:
       MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+      FRAUD_EVALUATION_SERVICE_URL: http://fraud-evaluation-service:8001
     depends_on:
       mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      fraud-evaluation-service:
         condition: service_healthy
     networks:
       - fraud-network

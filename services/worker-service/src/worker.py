@@ -7,40 +7,40 @@ Cumple Single Responsibility: Solo consume mensajes y ejecuta casos de uso
 Nota del desarrollador (María Gutiérrez):
 La IA sugirió procesar los mensajes en el mismo hilo. Agregué manejo
 de errores y dead letter queue para mayor resiliencia.
+
+Actualización: Ahora usa HTTP client para comunicarse con fraud-evaluation-service
+en lugar de imports directos.
 """
 import pika
 import json
-import asyncio
-from decimal import Decimal
-from shared.adapters import (
-    MongoDBAdapter,
-    RedisAdapter,
-    RabbitMQAdapter,
-)
-from shared.config import settings
-from shared.domain.strategies.amount_threshold import AmountThresholdStrategy
-from shared.domain.strategies.location_check import LocationStrategy
-from shared.application.use_cases import EvaluateTransactionUseCase
+import requests
+from src.config import settings
 
 
-def create_use_case() -> EvaluateTransactionUseCase:
+def call_fraud_evaluation_service(transaction_data: dict) -> dict:
     """
-    Crea el caso de uso con todas sus dependencias
+    Llama al servicio de evaluación de fraude vía HTTP
     
-    Nota del desarrollador:
-    La IA sugirió crear esto en cada callback. Lo extraje a una función
-    para cumplir con DRY y facilitar testing.
+    Args:
+        transaction_data: Datos de la transacción
+    
+    Returns:
+        Dict con el resultado de la evaluación
+    
+    Raises:
+        requests.RequestException: Si falla la comunicación
     """
-    repository = MongoDBAdapter(settings.mongodb_url, settings.mongodb_database)
-    publisher = RabbitMQAdapter(settings.rabbitmq_url)
-    cache = RedisAdapter(settings.redis_url, settings.redis_ttl)
-
-    strategies = [
-        AmountThresholdStrategy(threshold=Decimal(str(settings.amount_threshold))),
-        LocationStrategy(radius_km=settings.location_radius_km),
-    ]
-
-    return EvaluateTransactionUseCase(repository, publisher, cache, strategies)
+    try:
+        fraud_service_url = settings.fraud_evaluation_service_url
+        response = requests.post(
+            f"{fraud_service_url}/api/v1/evaluate",
+            json=transaction_data,
+            timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        raise Exception(f"Error calling fraud evaluation service: {str(e)}")
 
 
 def callback(ch, method, properties, body):
@@ -56,17 +56,18 @@ def callback(ch, method, properties, body):
     Nota del desarrollador:
     La IA olvidó agregar manejo de errores. Agregué try/except para
     evitar que un mensaje corrupto detenga el worker (resilience pattern).
+    
+    Actualización: Ahora llama al fraud-evaluation-service vía HTTP.
     """
     try:
         transaction_data = json.loads(body)
         print(f"Processing transaction: {transaction_data['id']}")
 
-        # Ejecutar caso de uso
-        use_case = create_use_case()
-        result = asyncio.run(use_case.execute(transaction_data))
+        # Llamar al servicio de evaluación
+        result = call_fraud_evaluation_service(transaction_data)
 
         print(
-            f"Transaction {transaction_data['id']} evaluated as {result['risk_level']}"
+            f"Transaction {transaction_data['id']} evaluated as {result.get('risk_level')}"
         )
 
         # Acknowledge el mensaje
