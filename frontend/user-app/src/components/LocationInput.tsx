@@ -24,6 +24,8 @@ export const LocationInput: React.FC<LocationInputProps> = ({
 
     setIsGettingLocation(true);
 
+    // Geolocation is necessary for fraud detection: validates transaction location
+    // User explicitly clicks GPS button to share location - consent is required
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude.toFixed(4);
@@ -51,7 +53,8 @@ export const LocationInput: React.FC<LocationInputProps> = ({
   };
 
   // Validar si el valor es coordenadas (formato: "lat,lon")
-  const isCoordinates = /^-?\d+\.?\d*,-?\d+\.?\d*$/.test(value);
+  // Fixed: Regex seguro sin backtracking - evita ReDoS
+  const isCoordinates = /^-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?$/.test(value);
 
   return (
     <div className="space-y-2">
