@@ -1,3 +1,9 @@
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA usó 'any' en todas partes.
+ * Definí tipos específicos para evitar errores y
+ * que el código sea más claro.
+ */
 export interface Rule {
   id: string;
   name: string;

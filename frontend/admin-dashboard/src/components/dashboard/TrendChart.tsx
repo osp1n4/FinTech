@@ -1,3 +1,9 @@
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA usó datos falsos (mock) en el gráfico.
+ * Lo cambié para mostrar datos reales del servidor
+ * porque los datos falsos no coincidían con las estadísticas.
+ */
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getTrends } from '@/services/api';

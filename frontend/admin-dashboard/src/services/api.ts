@@ -1,3 +1,9 @@
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA sugirió funciones separadas con fetch.
+ * Usé axios para tener toda la configuración en un solo lugar
+ * y manejar errores más fácilmente.
+ */
 import axios from 'axios';
 import type { Rule, Transaction, Metrics, TrendData } from '@/types';
 

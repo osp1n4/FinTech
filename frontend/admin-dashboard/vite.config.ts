@@ -1,3 +1,9 @@
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA usó configuración básica.
+ * Agregué alias '@' para no escribir '../../../' en los imports
+ * y proxy para evitar problemas de CORS.
+ */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'

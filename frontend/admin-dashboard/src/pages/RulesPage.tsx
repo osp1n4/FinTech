@@ -1,3 +1,9 @@
+/**
+ * HUMAN REVIEW (Maria Paula Gutierrez):
+ * La IA solo permitía ver reglas.
+ * Agregué botones para crear, editar y eliminar reglas
+ * directamente desde el dashboard sin tocar código.
+ */
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { getRules, updateRule, createRule, deleteRule } from '@/services/api';
