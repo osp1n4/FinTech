@@ -16,11 +16,11 @@ Proporcionar una plataforma integral de detección de fraude en transacciones fi
 1. **Flujo de Evaluación de Transacciones:**
    - El usuario inicia una transacción desde la aplicación móvil o web
    - El sistema recibe la transacción (userId, amount, location, deviceId) vía API
-   - Se aplican reglas de fraude configuradas (umbral de monto, ubicación inusual, dispositivo)
+   - Se aplican reglas de fraude configuradas (umbral de monto, ubicación inusual)
    - Se genera un nivel de riesgo: BAJO, MEDIO, ALTO
    - Las transacciones de RIESGO BAJO se aprueban automáticamente
    - Las transacciones de RIESGO MEDIO/ALTO se envían a cola para revisión manual
-
+   - Las transacciones de RIESGO ALTO se rec
 2. **Flujo de Revisión Manual (Human in the Loop):**
    - Las transacciones sospechosas se envían a cola de mensajes (RabbitMQ)
    - El analista de fraude revisa la transacción desde el dashboard administrativo
@@ -105,37 +105,26 @@ Proporcionar una plataforma integral de detección de fraude en transacciones fi
    - Ve el historial de sus transacciones evaluadas
    - No tiene acceso a reglas ni configuraciones del sistema
 
-2. **Analista de Fraude:**  
-   - Revisa transacciones marcadas como sospechosas
-   - Aprueba o rechaza transacciones con justificación
-   - Consulta el historial de auditoría
-   - No puede modificar reglas ni umbrales del sistema
-
-3. **Administrador del Sistema:**  
+2. **Administrador (Analista de Fraude / Administrador de Riesgo):**  
+   - Revisa transacciones marcadas como sospechosas con capacidad de aprobar/rechazar
    - Gestiona todas las reglas de fraude (crear, editar, eliminar, activar/desactivar)
    - Modifica umbrales sin necesidad de redespliegue (monto máximo, distancia permitida)
+   - Define políticas de detección de fraude y configura parámetros de riesgo
    - Consulta reportes completos de auditoría
+   - Analiza métricas y tendencias de fraude
    - Gestiona configuraciones del sistema
    - Acceso completo a todas las funcionalidades administrativas
-
-4. **Administrador de Riesgo (Risk Manager):**  
-   - Define políticas de detección de fraude
-   - Configura parámetros de riesgo y umbrales
-   - Analiza métricas y tendencias de fraude
-   - Aprueba cambios críticos en las reglas
 
 ### Permisos y Limitaciones de Cada Perfil:
 
 | Perfil | Ver Transacciones | Revisar Manualmente | Modificar Reglas | Ver Auditoría | Configurar Sistema |
 |--------|-------------------|---------------------|------------------|---------------|-------------------|
 | **Usuario Final** | ✅ Propias | ❌ | ❌ | ❌ | ❌ |
-| **Analista de Fraude** | ✅ Sospechosas | ✅ | ❌ | ✅ Limitada | ❌ |
-| **Admin del Sistema** | ✅ Todas | ✅ | ✅ | ✅ Completa | ✅ |
-| **Admin de Riesgo** | ✅ Todas | ✅ | ✅ | ✅ Completa | ✅ |
+| **Administrador** | ✅ Todas | ✅ | ✅ | ✅ Completa | ✅ |
 
 **Restricciones importantes:**
 - Los usuarios finales NO pueden ver transacciones de otros usuarios
-- Los analistas NO pueden modificar umbrales ni reglas (solo revisar casos)
+- Solo los administradores tienen acceso al dashboard administrativo
 - Los administradores deben justificar los cambios de configuración críticos
 - Toda acción administrativa queda registrada en el log de auditoría
 
