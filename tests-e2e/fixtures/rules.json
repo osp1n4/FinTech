@@ -1,0 +1,66 @@
+[
+  {
+    "name": "Umbral de Monto Alto",
+    "type": "amount_threshold",
+    "parameters": {
+      "threshold": 1500.0
+    },
+    "priority": 10,
+    "enabled": true,
+    "description": "Detecta transacciones superiores a $1,500"
+  },
+  {
+    "name": "Validación de Ubicación GPS",
+    "type": "location",
+    "parameters": {
+      "max_distance_km": 100
+    },
+    "priority": 20,
+    "enabled": true,
+    "description": "Verifica que la transacción esté dentro de 100km de la última ubicación conocida"
+  },
+  {
+    "name": "Ventana de Tiempo Sospechosa",
+    "type": "time_based",
+    "parameters": {
+      "window_minutes": 10,
+      "max_transactions": 3
+    },
+    "priority": 15,
+    "enabled": true,
+    "description": "Detecta más de 3 transacciones en 10 minutos"
+  },
+  {
+    "name": "Validación de Dispositivo Conocido",
+    "type": "device",
+    "parameters": {
+      "require_known_device": true
+    },
+    "priority": 25,
+    "enabled": true,
+    "description": "Requiere que el dispositivo esté previamente registrado"
+  },
+  {
+    "name": "Horario Nocturno",
+    "type": "time_based",
+    "parameters": {
+      "start_hour": 0,
+      "end_hour": 6,
+      "action": "flag"
+    },
+    "priority": 5,
+    "enabled": false,
+    "description": "Marca transacciones entre medianoche y 6am como sospechosas"
+  },
+  {
+    "name": "País de Alto Riesgo",
+    "type": "location",
+    "parameters": {
+      "blocked_countries": ["XX", "YY"],
+      "action": "reject"
+    },
+    "priority": 30,
+    "enabled": true,
+    "description": "Bloquea automáticamente transacciones de países de alto riesgo"
+  }
+]

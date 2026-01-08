@@ -1,12 +1,12 @@
 /**
  * HUMAN REVIEW (Maria Paula Gutierrez):
  * La IA solo permitía ver reglas.
- * Agregué botones para crear, editar y eliminar reglas
+ * Agregué botones para crear y editar reglas
  * directamente desde el dashboard sin tocar código.
  */
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getRules, updateRule, createRule, deleteRule } from '@/services/api';
+import { getRules, updateRule, createRule } from '@/services/api';
 import type { Rule } from '@/types';
 
 export default function RulesPage() {
@@ -91,21 +91,7 @@ export default function RulesPage() {
     }
   };
 
-  const handleDeleteRule = async (ruleId: string, ruleName: string) => {
-    if (!confirm(`¿Estás seguro de eliminar la regla "${ruleName}"?`)) {
-      return;
-    }
-    
-    try {
-      await deleteRule(ruleId);
-      toast.success('Regla eliminada exitosamente');
-      loadRules();
-    } catch (error: any) {
-      const message = error?.response?.data?.detail || 'Error al eliminar regla';
-      toast.error(message);
-      console.error('Error eliminando regla:', error);
-    }
-  };
+
 
   if (loading) {
     return <div className="text-gray-400">Cargando...</div>;
@@ -135,12 +121,6 @@ export default function RulesPage() {
                   className="px-4 py-2 bg-admin-primary rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                   Editar
-                </button>
-                <button
-                  onClick={() => handleDeleteRule(rule.id, rule.name)}
-                  className="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Eliminar
                 </button>
               </div>
             </div>
