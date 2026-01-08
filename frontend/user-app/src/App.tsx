@@ -47,7 +47,7 @@ function App() {
         {/* Navigation */}
         <nav className="bg-white shadow-sm border-b sticky top-0 z-10">
           <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 className="text-xl font-bold text-gray-900">Fraud Detection</h1>
+            <h1 className="text-xl font-bold text-gray-900">FinTech Bank</h1>
             <div className="flex gap-4 items-center">
               <UserSelector />
               <div className="flex gap-2">
@@ -106,10 +106,10 @@ function App() {
           className="text-center mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🏦 SecureBank Transfer
+            FinTech Bank
           </h1>
           <p className="text-gray-600">
-            Sistema de detección de fraude en tiempo real
+            Generación de transacciones seguras
           </p>
         </motion.div>
 
@@ -178,7 +178,7 @@ function App() {
           transition={{ delay: 0.5 }}
           className="mt-8 text-center text-sm text-gray-500"
         >
-          Powered by Fraud Detection Engine v1.0
+          Powered by FinTech Bank v1.0
         </motion.div>
       </div>
     </div>

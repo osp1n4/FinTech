@@ -13,7 +13,7 @@ from services.shared.domain.models import (
     Transaction,
     Location,
     RiskLevel,
-    TransactionStatus
+    FraudEvaluation
 )
 
 
@@ -60,122 +60,55 @@ class TestLocation:
 class TestTransaction:
     """Tests para el modelo Transaction."""
     
-    def test_transaction_creation(self, sample_transaction_data):
+    def test_transaction_creation(self):
         """Test: Debe crear una transacción con todos los campos requeridos."""
         # Arrange
         location = Location(latitude=4.7110, longitude=-74.0721)
         
         # Act
         transaction = Transaction(
-            transaction_id=sample_transaction_data["transaction_id"],
-            user_id=sample_transaction_data["user_id"],
-            amount=Decimal(str(sample_transaction_data["amount"])),
+            id="test_001",
+            user_id="user_001",
+            amount=Decimal("100.0"),
             location=location,
-            device_id=sample_transaction_data["device_id"],
             timestamp=datetime.now()
         )
         
         # Assert
-        assert transaction.transaction_id == sample_transaction_data["transaction_id"]
-        assert transaction.user_id == sample_transaction_data["user_id"]
+        assert transaction.id == "test_001"
+        assert transaction.user_id == "user_001"
         assert transaction.amount == Decimal("100.0")
         assert transaction.location == location
-        assert transaction.device_id == sample_transaction_data["device_id"]
-        assert transaction.status == TransactionStatus.PENDING
-        assert transaction.risk_score == 0
     
-    def test_transaction_initial_status_pending(self):
-        """Test: Una transacción nueva debe tener estado PENDING."""
+    def test_transaction_invalid_empty_id(self):
+        """Test: Debe rechazar transacción con ID vacío."""
         # Arrange
         location = Location(latitude=4.7110, longitude=-74.0721)
         
-        # Act
-        transaction = Transaction(
-            transaction_id="test_001",
-            user_id="user_001",
-            amount=Decimal("100.0"),
-            location=location,
-            device_id="device_001",
-            timestamp=datetime.now()
-        )
-        
-        # Assert
-        assert transaction.status == TransactionStatus.PENDING
+        # Act & Assert
+        with pytest.raises(ValueError, match="Transaction ID cannot be empty"):
+            Transaction(
+                id="",
+                user_id="user_001",
+                amount=Decimal("100.0"),
+                location=location,
+                timestamp=datetime.now()
+            )
     
-    def test_transaction_initial_risk_score_zero(self):
-        """Test: Una transacción nueva debe tener risk_score = 0."""
+    def test_transaction_invalid_empty_user_id(self):
+        """Test: Debe rechazar transacción con user_id vacío."""
         # Arrange
         location = Location(latitude=4.7110, longitude=-74.0721)
         
-        # Act
-        transaction = Transaction(
-            transaction_id="test_001",
-            user_id="user_001",
-            amount=Decimal("100.0"),
-            location=location,
-            device_id="device_001",
-            timestamp=datetime.now()
-        )
-        
-        # Assert
-        assert transaction.risk_score == 0
-    
-    def test_transaction_mark_as_approved(self):
-        """Test: Debe poder marcar una transacción como aprobada."""
-        # Arrange
-        location = Location(latitude=4.7110, longitude=-74.0721)
-        transaction = Transaction(
-            transaction_id="test_001",
-            user_id="user_001",
-            amount=Decimal("100.0"),
-            location=location,
-            device_id="device_001",
-            timestamp=datetime.now()
-        )
-        
-        # Act
-        transaction.status = TransactionStatus.APPROVED
-        
-        # Assert
-        assert transaction.status == TransactionStatus.APPROVED
-    
-    def test_transaction_mark_as_blocked(self):
-        """Test: Debe poder marcar una transacción como bloqueada."""
-        # Arrange
-        location = Location(latitude=4.7110, longitude=-74.0721)
-        transaction = Transaction(
-            transaction_id="test_001",
-            user_id="user_001",
-            amount=Decimal("100.0"),
-            location=location,
-            device_id="device_001",
-            timestamp=datetime.now()
-        )
-        
-        # Act
-        transaction.status = TransactionStatus.BLOCKED
-        
-        # Assert
-        assert transaction.status == TransactionStatus.BLOCKED
-    
-    def test_transaction_update_risk_score(self):
-        """Test: Debe poder actualizar el risk_score de una transacción."""
-        # Arrange
-        location = Location(latitude=4.7110, longitude=-74.0721)
-        transaction = Transaction(
-            transaction_id="test_001",
-            user_id="user_001",
-            amount=Decimal("100.0"),
-            location=location,
-            device_id="device_001",
-            timestamp=datetime.now()
-        )
-        
-        # Act
-        transaction.risk_score = 75
-        
-        # Assert
-        assert transaction.risk_score == 75
+        # Act & Assert
+        with pytest.raises(ValueError, match="User ID cannot be empty"):
+            Transaction(
+                id="test_001",
+                user_id="",
+                amount=Decimal("100.0"),
+                location=location,
+                timestamp=datetime.now()
+            )
     
     def test_transaction_amount_must_be_positive(self):
         """Test: El monto de la transacción debe ser mayor a cero."""
@@ -183,25 +116,137 @@ class TestTransaction:
         location = Location(latitude=4.7110, longitude=-74.0721)
         
         # Act & Assert
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Amount must be positive"):
             Transaction(
-                transaction_id="test_001",
+                id="test_001",
                 user_id="user_001",
-                amount=Decimal("-100.0"),  # Monto negativo
+                amount=Decimal("-100.0"),
                 location=location,
-                device_id="device_001",
                 timestamp=datetime.now()
             )
         
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Amount must be positive"):
             Transaction(
-                transaction_id="test_001",
+                id="test_001",
                 user_id="user_001",
-                amount=Decimal("0.0"),  # Monto cero
+                amount=Decimal("0.0"),
                 location=location,
-                device_id="device_001",
                 timestamp=datetime.now()
             )
+    
+    def test_transaction_requires_location(self):
+        """Test: Una transacción debe tener una ubicación."""
+        # Act & Assert
+        with pytest.raises(ValueError, match="Location cannot be None"):
+            Transaction(
+                id="test_001",
+                user_id="user_001",
+                amount=Decimal("100.0"),
+                location=None,
+                timestamp=datetime.now()
+            )
+
+
+class TestFraudEvaluation:
+    """Tests para el modelo FraudEvaluation."""
+    
+    def test_fraud_evaluation_low_risk_auto_approved(self):
+        """Test: Las evaluaciones de riesgo bajo deben aprobarse automáticamente."""
+        # Arrange & Act
+        evaluation = FraudEvaluation(
+            transaction_id="test_001",
+            user_id="user_001",
+            risk_level=RiskLevel.LOW_RISK,
+            reasons=["No risk factors detected"],
+            timestamp=datetime.now()
+        )
+        
+        # Assert
+        assert evaluation.status == "APPROVED"
+        assert evaluation.risk_level == RiskLevel.LOW_RISK
+    
+    def test_fraud_evaluation_medium_risk_pending_review(self):
+        """Test: Las evaluaciones de riesgo medio deben requerir revisión."""
+        # Arrange & Act
+        evaluation = FraudEvaluation(
+            transaction_id="test_001",
+            user_id="user_001",
+            risk_level=RiskLevel.MEDIUM_RISK,
+            reasons=["Unusual location"],
+            timestamp=datetime.now()
+        )
+        
+        # Assert
+        assert evaluation.status == "PENDING_REVIEW"
+        assert evaluation.risk_level == RiskLevel.MEDIUM_RISK
+    
+    def test_fraud_evaluation_high_risk_rejected(self):
+        """Test: Las evaluaciones de riesgo alto deben rechazarse automáticamente."""
+        # Arrange & Act
+        evaluation = FraudEvaluation(
+            transaction_id="test_001",
+            user_id="user_001",
+            risk_level=RiskLevel.HIGH_RISK,
+            reasons=["Multiple fraud indicators"],
+            timestamp=datetime.now()
+        )
+        
+        # Assert
+        assert evaluation.status == "REJECTED"
+        assert evaluation.risk_level == RiskLevel.HIGH_RISK
+    
+    def test_fraud_evaluation_manual_decision_approved(self):
+        """Test: Debe permitir que un analista apruebe manualmente una transacción."""
+        # Arrange
+        evaluation = FraudEvaluation(
+            transaction_id="test_001",
+            user_id="user_001",
+            risk_level=RiskLevel.MEDIUM_RISK,
+            reasons=["Unusual location"],
+            timestamp=datetime.now()
+        )
+        
+        # Act
+        evaluation.apply_manual_decision("APPROVED", "analyst_001")
+        
+        # Assert
+        assert evaluation.status == "APPROVED"
+        assert evaluation.reviewed_by == "analyst_001"
+        assert evaluation.reviewed_at is not None
+    
+    def test_fraud_evaluation_manual_decision_rejected(self):
+        """Test: Debe permitir que un analista rechace manualmente una transacción."""
+        # Arrange
+        evaluation = FraudEvaluation(
+            transaction_id="test_001",
+            user_id="user_001",
+            risk_level=RiskLevel.MEDIUM_RISK,
+            reasons=["Unusual location"],
+            timestamp=datetime.now()
+        )
+        
+        # Act
+        evaluation.apply_manual_decision("REJECTED", "analyst_001")
+        
+        # Assert
+        assert evaluation.status == "REJECTED"
+        assert evaluation.reviewed_by == "analyst_001"
+        assert evaluation.reviewed_at is not None
+    
+    def test_fraud_evaluation_invalid_decision(self):
+        """Test: Debe rechazar decisiones inválidas."""
+        # Arrange
+        evaluation = FraudEvaluation(
+            transaction_id="test_001",
+            user_id="user_001",
+            risk_level=RiskLevel.MEDIUM_RISK,
+            reasons=["Unusual location"],
+            timestamp=datetime.now()
+        )
+        
+        # Act & Assert
+        with pytest.raises(ValueError, match="Invalid decision"):
+            evaluation.apply_manual_decision("INVALID", "analyst_001")
 
 
 class TestRiskLevel:

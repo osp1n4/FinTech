@@ -15,9 +15,9 @@ para cumplir con Single Responsibility y Command Query Separation (CQS).
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Dict, Any, Optional
-from shared.domain.models import Transaction, FraudEvaluation, Location, RiskLevel
-from shared.domain.strategies.base import FraudStrategy
-from shared.application.interfaces import (
+from services.shared.domain.models import Transaction, FraudEvaluation, Location, RiskLevel
+from services.shared.domain.strategies.base import FraudStrategy
+from services.shared.application.interfaces import (
     TransactionRepository,
     MessagePublisher,
     CacheService,

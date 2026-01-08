@@ -14,7 +14,7 @@ from services.shared.domain.models import (
     Transaction,
     Location,
     RiskLevel,
-    TransactionStatus
+    FraudEvaluation
 )
 from services.shared.application.use_cases import EvaluateTransactionUseCase
 from services.shared.domain.strategies.amount_threshold import AmountThresholdStrategy

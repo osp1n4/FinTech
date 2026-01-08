@@ -42,11 +42,10 @@ class TestAmountThresholdStrategy:
         strategy = AmountThresholdStrategy(threshold=Decimal("1500.0"))
         location = Location(latitude=4.7110, longitude=-74.0721)
         transaction = Transaction(
-            transaction_id="test_001",
+            id="test_001",
             user_id="user_001",
             amount=Decimal("2000.0"),  # Excede el umbral
             location=location,
-            device_id="device_001",
             timestamp=datetime.now()
         )
         
@@ -65,11 +64,10 @@ class TestAmountThresholdStrategy:
         strategy = AmountThresholdStrategy(threshold=Decimal("1500.0"))
         location = Location(latitude=4.7110, longitude=-74.0721)
         transaction = Transaction(
-            transaction_id="test_001",
+            id="test_001",
             user_id="user_001",
             amount=Decimal("500.0"),  # Por debajo del umbral
             location=location,
-            device_id="device_001",
             timestamp=datetime.now()
         )
         
@@ -86,11 +84,10 @@ class TestAmountThresholdStrategy:
         strategy = AmountThresholdStrategy(threshold=Decimal("1500.0"))
         location = Location(latitude=4.7110, longitude=-74.0721)
         transaction = Transaction(
-            transaction_id="test_001",
+            id="test_001",
             user_id="user_001",
             amount=Decimal("1500.0"),  # Exactamente el umbral
             location=location,
-            device_id="device_001",
             timestamp=datetime.now()
         )
         
@@ -116,11 +113,10 @@ class TestAmountThresholdStrategy:
         strategy = AmountThresholdStrategy(threshold=Decimal("1500.50"))
         location = Location(latitude=4.7110, longitude=-74.0721)
         transaction = Transaction(
-            transaction_id="test_001",
+            id="test_001",
             user_id="user_001",
             amount=Decimal("1500.51"),  # Mínimamente superior
             location=location,
-            device_id="device_001",
             timestamp=datetime.now()
         )
         

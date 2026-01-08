@@ -16,8 +16,8 @@ en el Domain Layer (cumple Clean Architecture: Domain sin dependencias externas)
 """
 from math import radians, cos, sin, asin, sqrt
 from typing import Dict, Any, Optional
-from shared.domain.strategies.base import FraudStrategy
-from shared.domain.models import Transaction, RiskLevel, Location
+from services.shared.domain.strategies.base import FraudStrategy
+from services.shared.domain.models import Transaction, RiskLevel, Location
 
 
 class LocationStrategy(FraudStrategy):

@@ -15,7 +15,7 @@ el principio "Tell, don't ask" y proporciona información rica para auditoría.
 """
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
-from shared.domain.models import Transaction, RiskLevel, Location
+from services.shared.domain.models import Transaction, RiskLevel, Location
 
 
 class FraudStrategy(ABC):
