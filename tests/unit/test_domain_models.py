@@ -7,9 +7,13 @@ Primero se definen los casos de prueba que validan el comportamiento esperado,
 luego se verifica que el código existente cumple con esas expectativas.
 """
 import pytest
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'services' / 'fraud-evaluation-service'))
+
 from datetime import datetime
 from decimal import Decimal
-from services.shared.domain.models import (
+from src.domain.models import (
     Transaction,
     Location,
     RiskLevel,

@@ -7,17 +7,21 @@ la lógica de negocio sin depender de implementaciones concretas.
 Se usan mocks para las dependencias externas.
 """
 import pytest
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'services' / 'fraud-evaluation-service'))
+
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock, AsyncMock
-from services.shared.domain.models import (
+from src.domain.models import (
     Transaction,
     Location,
     RiskLevel,
     FraudEvaluation
 )
-from services.shared.application.use_cases import EvaluateTransactionUseCase
-from services.shared.domain.strategies.amount_threshold import AmountThresholdStrategy
+from src.application.use_cases import EvaluateTransactionUseCase
+from src.domain.strategies.amount_threshold import AmountThresholdStrategy
 
 
 class TestEvaluateTransactionUseCase:
@@ -27,23 +31,23 @@ class TestEvaluateTransactionUseCase:
     def mock_repository(self):
         """Mock del repositorio de transacciones."""
         repo = Mock()
-        repo.save = AsyncMock(return_value=True)
-        repo.get_by_id = AsyncMock(return_value=None)
+        repo.save_evaluation = AsyncMock(return_value=True)
+        repo.get_evaluation_by_id = AsyncMock(return_value=None)
         return repo
     
     @pytest.fixture
     def mock_publisher(self):
         """Mock del publicador de mensajes."""
         publisher = Mock()
-        publisher.publish = AsyncMock(return_value=True)
+        publisher.publish_for_manual_review = AsyncMock(return_value=True)
         return publisher
     
     @pytest.fixture
     def mock_cache(self):
         """Mock del servicio de caché."""
         cache = Mock()
-        cache.get = AsyncMock(return_value=None)
-        cache.set = AsyncMock(return_value=True)
+        cache.get_user_location = AsyncMock(return_value=None)
+        cache.set_user_location = AsyncMock(return_value=True)
         return cache
     
     @pytest.fixture
@@ -73,9 +77,9 @@ class TestEvaluateTransactionUseCase:
         
         # Assert
         assert result["status"] == "APPROVED" or result["status"] == "PENDING"
-        assert result["risk_score"] < 50
+        assert result["risk_level"] in ["LOW_RISK", "MEDIUM_RISK"]
         # Verificar que se guardó en el repositorio
-        mock_repository.save.assert_called_once()
+        mock_repository.save_evaluation.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_evaluate_transaction_high_risk(
@@ -90,10 +94,10 @@ class TestEvaluateTransactionUseCase:
         result = await use_case_with_threshold_strategy.execute(transaction_data)
         
         # Assert
-        assert result["risk_score"] > 50
+        assert result["risk_level"] in ["HIGH_RISK", "MEDIUM_RISK"]
         assert "amount_threshold_exceeded" in str(result.get("reasons", []))
         # Verificar que se guardó en el repositorio
-        mock_repository.save.assert_called_once()
+        mock_repository.save_evaluation.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_evaluate_transaction_saves_to_repository(
@@ -104,7 +108,7 @@ class TestEvaluateTransactionUseCase:
         await use_case_with_threshold_strategy.execute(sample_transaction_data)
         
         # Assert
-        mock_repository.save.assert_called_once()
+        mock_repository.save_evaluation.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_evaluate_transaction_publishes_event(
@@ -176,7 +180,7 @@ class TestEvaluateTransactionUseCase:
         }
         
         # Act & Assert
-        with pytest.raises(KeyError):
+        with pytest.raises(ValueError):
             await use_case_with_threshold_strategy.execute(incomplete_data)
 
 

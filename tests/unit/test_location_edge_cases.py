@@ -10,7 +10,11 @@ Copilot generó estos tests automáticamente. Los revisé y agregué
 algunos casos adicionales específicos para Colombia y casos de uso real.
 """
 import pytest
-from services.shared.domain.models import Location
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'services' / 'fraud-evaluation-service'))
+
+from src.domain.models import Location
 
 
 class TestLocationEdgeCases:

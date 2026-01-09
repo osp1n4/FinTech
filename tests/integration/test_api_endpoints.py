@@ -7,6 +7,10 @@ desde la entrada HTTP hasta la respuesta, pasando por
 todas las capas (API -> Application -> Domain -> Infrastructure).
 """
 import pytest
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'services' / 'api-gateway'))
+
 from fastapi.testclient import TestClient
 from decimal import Decimal
 
@@ -14,7 +18,7 @@ from decimal import Decimal
 @pytest.fixture
 def client():
     """Cliente de prueba para FastAPI."""
-    from services.api_gateway.src.main import app
+    from src.main import app
     return TestClient(app)
 
 

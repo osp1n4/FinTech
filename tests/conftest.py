@@ -14,10 +14,13 @@ from typing import Dict, Any
 def sample_transaction_data() -> Dict[str, Any]:
     """Datos de ejemplo para una transacción válida."""
     return {
-        "transaction_id": "test_txn_001",
+        "id": "test_txn_001",
         "user_id": "user_test_001",
         "amount": 100.0,
-        "location": "4.7110,-74.0721",  # Bogotá, Colombia
+        "location": {
+            "latitude": 4.7110,
+            "longitude": -74.0721
+        },  # Bogotá, Colombia
         "device_id": "device_001",
         "timestamp": datetime.now().isoformat(),
         "metadata": {}
@@ -28,10 +31,13 @@ def sample_transaction_data() -> Dict[str, Any]:
 def high_risk_transaction_data() -> Dict[str, Any]:
     """Datos de ejemplo para una transacción de alto riesgo."""
     return {
-        "transaction_id": "test_txn_high_risk",
+        "id": "test_txn_high_risk",
         "user_id": "user_test_002",
         "amount": 5000.0,  # Monto alto
-        "location": "40.7128,-74.0060",  # Nueva York (ubicación inusual)
+        "location": {
+            "latitude": 40.7128,
+            "longitude": -74.0060
+        },  # Nueva York (ubicación inusual)
         "device_id": "new_device_suspicious",
         "timestamp": datetime.now().isoformat(),
         "metadata": {}

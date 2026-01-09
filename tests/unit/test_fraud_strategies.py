@@ -6,14 +6,18 @@ Estos tests validan que cada estrategia detecte correctamente
 los patrones de fraude según los requisitos de negocio.
 """
 import pytest
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'services' / 'fraud-evaluation-service'))
+
 from datetime import datetime
 from decimal import Decimal
-from services.shared.domain.models import (
+from src.domain.models import (
     Transaction,
     Location,
     RiskLevel
 )
-from services.shared.domain.strategies.amount_threshold import AmountThresholdStrategy
+from src.domain.strategies.amount_threshold import AmountThresholdStrategy
 
 
 class TestAmountThresholdStrategy:
