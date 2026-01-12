@@ -117,6 +117,8 @@ class EvaluateTransactionUseCase:
             timestamp=datetime.now(),
             amount=transaction.amount,
             location=transaction.location,
+            transaction_type=transaction.transaction_type,
+            description=transaction.description,
         )
 
         # 5. Persistir evaluación
@@ -178,6 +180,8 @@ class EvaluateTransactionUseCase:
                 location=location,
                 timestamp=timestamp,
                 device_id=data.get("device_id"),
+                transaction_type=data.get("transaction_type"),
+                description=data.get("description"),
             )
         except KeyError as e:
             raise ValueError(f"Missing required field: {e}")

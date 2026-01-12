@@ -3,6 +3,8 @@ export interface TransactionRequest {
   userId: string;
   location: string;
   deviceId: string;
+  transactionType?: 'transfer' | 'payment' | 'recharge' | 'deposit';
+  description?: string;
 }
 
 export interface TransactionResponse {

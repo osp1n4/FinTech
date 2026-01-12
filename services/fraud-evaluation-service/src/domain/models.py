@@ -79,6 +79,8 @@ class Transaction:
     location: Location
     timestamp: datetime
     device_id: Optional[str] = None
+    transaction_type: Optional[str] = None  # 'transfer', 'payment', 'recharge', 'deposit'
+    description: Optional[str] = None  # Descripción o destinatario
 
     def __post_init__(self) -> None:
         """
@@ -91,8 +93,9 @@ class Transaction:
         if not self.id or not self.id.strip():
             raise ValueError("Transaction ID cannot be empty")
 
-        if self.amount <= 0:
-            raise ValueError("Amount must be positive")
+        # Permitir montos negativos (transferencias/pagos) y positivos (depósitos)
+        if self.amount == 0:
+            raise ValueError("Amount cannot be zero")
 
         if not self.user_id or not self.user_id.strip():
             raise ValueError("User ID cannot be empty")
@@ -129,6 +132,8 @@ class FraudEvaluation:
     reviewed_at: Optional[datetime] = None
     user_authenticated: Optional[bool] = None  # Si el usuario confirmó la transacción
     user_auth_timestamp: Optional[datetime] = None  # Cuándo el usuario autenticó
+    transaction_type: Optional[str] = None  # Tipo de transacción
+    description: Optional[str] = None  # Descripción o destinatario
 
     def __post_init__(self) -> None:
         """

@@ -24,6 +24,8 @@ class TransactionRequest(BaseModel):
     user_id: str = Field(..., description="User ID")
     location: dict = Field(..., description="Transaction location")
     timestamp: Optional[str] = None
+    transaction_type: Optional[str] = Field(None, description="Tipo de transacción: transfer, payment, recharge, deposit")
+    description: Optional[str] = Field(None, description="Descripción o destinatario de la transacción")
 
 
 class ReviewRequest(BaseModel):
@@ -112,6 +114,18 @@ async def submit_transaction(transaction: TransactionRequest):
         cache = _cache_factory()
         publisher = _publisher_factory()
         
+        # Ajustar el monto según el tipo de transacción
+        transaction_data = transaction.model_dump()
+        transaction_type = transaction_data.get('transaction_type', 'transfer')
+        
+        # Transferencias, pagos y recargas son salidas de dinero (negativo)
+        # Depósitos son entradas de dinero (positivo)
+        if transaction_type in ['transfer', 'payment', 'recharge']:
+            # Hacer el monto negativo si no lo es
+            if transaction_data['amount'] > 0:
+                transaction_data['amount'] = -transaction_data['amount']
+        # Para 'deposit' el monto ya es positivo, no se modifica
+        
         # Crear estrategias
         from decimal import Decimal
         from src.config import settings
@@ -133,7 +147,7 @@ async def submit_transaction(transaction: TransactionRequest):
         from src.application.use_cases import EvaluateTransactionUseCase
         evaluate_use_case = EvaluateTransactionUseCase(repository, publisher, cache, strategies)
         
-        result = await evaluate_use_case.execute(transaction.model_dump())
+        result = await evaluate_use_case.execute(transaction_data)
         return {
             "status": "accepted",
             "transaction_id": transaction.id,
@@ -401,14 +415,28 @@ async def validate_transaction_sync(transaction: TransactionValidateRequest):
             city = location_str.split(",")[0].strip()
             location_dict = location_coords.get(city, {"latitude": 40.7128, "longitude": -74.0060})
         
+        # Ajustar el monto según el tipo de transacción
+        adjusted_amount = transaction.amount
+        transaction_type = getattr(transaction, 'transactionType', 'transfer')
+        
+        # Transferencias, pagos y recargas son salidas de dinero (negativo)
+        # Depósitos son entradas de dinero (positivo)
+        if transaction_type in ['transfer', 'payment', 'recharge']:
+            # Hacer el monto negativo si no lo es
+            if adjusted_amount > 0:
+                adjusted_amount = -adjusted_amount
+        # Para 'deposit' el monto ya es positivo, no se modifica
+        
         # Preparar payload
         transaction_data = {
             "id": str(uuid.uuid4()),
-            "amount": transaction.amount,
+            "amount": adjusted_amount,
             "user_id": transaction.userId,
             "location": location_dict,
             "timestamp": datetime.utcnow().isoformat(),
-            "device_id": transaction.deviceId
+            "device_id": transaction.deviceId,
+            "transaction_type": transaction_type,
+            "description": getattr(transaction, 'description', None)
         }
         
         # DEBUG: Ver payload completo
@@ -1126,7 +1154,9 @@ async def get_user_transactions(
                 "needsAuthentication": e.status == "PENDING_REVIEW" and e.user_authenticated is None,
                 "userAuthenticated": e.user_authenticated,
                 "reviewedBy": e.reviewed_by,
-                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None
+                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None,
+                "transactionType": e.transaction_type,
+                "description": e.description
             }
             for e in evaluations
         ]

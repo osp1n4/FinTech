@@ -5,8 +5,22 @@ import type { Transaction } from '@/types';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  
+  // Filtros locales
+  const [searchId, setSearchId] = useState('');
+  const [searchUser, setSearchUser] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
+  
+  // Estados para mostrar/ocultar filtros
+  const [showIdFilter, setShowIdFilter] = useState(false);
+  const [showUserFilter, setShowUserFilter] = useState(false);
+  const [showLocationFilter, setShowLocationFilter] = useState(false);
+  const [showAmountFilter, setShowAmountFilter] = useState(false);
 
   useEffect(() => {
     loadTransactions();
@@ -15,8 +29,9 @@ export default function TransactionsPage() {
   const loadTransactions = async () => {
     setLoading(true);
     try {
-      const data = await getTransactionsLog(filter || undefined, 100);
-      setTransactions(data);
+      const data = await getTransactionsLog(filter || undefined, 500);
+      setAllTransactions(data);
+      applyFilters(data);
     } catch (error) {
       console.error('Error loading transactions:', error);
     } finally {
@@ -24,26 +39,48 @@ export default function TransactionsPage() {
     }
   };
 
+  // Aplicar filtros locales
+  const applyFilters = (data: Transaction[]) => {
+    let filtered = [...data];
+
+    if (searchId) {
+      filtered = filtered.filter(tx => 
+        tx.id.toLowerCase().includes(searchId.toLowerCase())
+      );
+    }
+
+    if (searchUser) {
+      filtered = filtered.filter(tx => 
+        tx.userId.toLowerCase().includes(searchUser.toLowerCase())
+      );
+    }
+
+    if (searchLocation) {
+      filtered = filtered.filter(tx => 
+        tx.location?.toLowerCase().includes(searchLocation.toLowerCase())
+      );
+    }
+
+    if (minAmount) {
+      filtered = filtered.filter(tx => tx.amount >= parseFloat(minAmount));
+    }
+    if (maxAmount) {
+      filtered = filtered.filter(tx => tx.amount <= parseFloat(maxAmount));
+    }
+
+    setTransactions(filtered);
+  };
+
+  useEffect(() => {
+    applyFilters(allTransactions);
+  }, [searchId, searchUser, searchLocation, minAmount, maxAmount, allTransactions]);
+
   const handleReview = async (transactionId: string, decision: 'APPROVED' | 'REJECTED') => {
-    console.log('🔵 handleReview llamado:', { transactionId, decision });
     try {
-      console.log('🔵 Llamando a reviewTransaction...');
-      const result = await reviewTransaction(transactionId, decision);
-      console.log('✅ reviewTransaction exitoso:', result);
-      
-      // Recargar transacciones para reflejar el cambio
-      console.log('🔵 Recargando transacciones...');
+      await reviewTransaction(transactionId, decision);
       await loadTransactions();
-      console.log('✅ Transacciones recargadas');
-      
       alert(`Transacción ${decision === 'APPROVED' ? 'aprobada' : 'rechazada'} exitosamente`);
     } catch (error: any) {
-      console.error('❌ Error reviewing transaction:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
       alert(`Error al revisar la transacción: ${error.response?.data?.detail || error.message}`);
     }
   };
@@ -60,9 +97,10 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Filtros */}
+      {/* Filtro de estado */}
       <div className="bg-admin-surface rounded-xl p-4">
-        <div className="flex space-x-4">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium text-gray-400">Estado:</span>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -73,6 +111,9 @@ export default function TransactionsPage() {
             <option value="SUSPICIOUS">Sospechosas</option>
             <option value="REJECTED">Rechazadas</option>
           </select>
+          <span className="text-sm text-gray-400 ml-auto">
+            Mostrando {transactions.length} de {allTransactions.length} transacciones
+          </span>
         </div>
       </div>
 
@@ -85,10 +126,100 @@ export default function TransactionsPage() {
             <table className="w-full">
               <thead className="bg-admin-bg">
                 <tr>
-                  <th className="text-left py-4 px-6 text-gray-400 font-medium">ID</th>
-                  <th className="text-left py-4 px-6 text-gray-400 font-medium">Monto</th>
-                  <th className="text-left py-4 px-6 text-gray-400 font-medium">Usuario</th>
-                  <th className="text-left py-4 px-6 text-gray-400 font-medium">Ubicación</th>
+                  <th className="text-left py-4 px-6 text-gray-400 font-medium">
+                    <div className="flex items-center gap-2">
+                      ID
+                      <button
+                        onClick={() => setShowIdFilter(!showIdFilter)}
+                        className="text-gray-500 hover:text-admin-primary transition-colors"
+                        title="Filtrar por ID"
+                      >
+                        🔍
+                      </button>
+                    </div>
+                    {showIdFilter && (
+                      <input
+                        type="text"
+                        placeholder="Buscar ID..."
+                        value={searchId}
+                        onChange={(e) => setSearchId(e.target.value)}
+                        className="mt-2 px-3 py-1 w-full bg-admin-bg rounded border border-gray-600 focus:border-admin-primary focus:outline-none text-sm text-white"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                  </th>
+                  <th className="text-left py-4 px-6 text-gray-400 font-medium">
+                    <div className="flex items-center gap-2">
+                      Monto
+                      <button
+                        onClick={() => setShowAmountFilter(!showAmountFilter)}
+                        className="text-gray-500 hover:text-admin-primary transition-colors"
+                        title="Filtrar por monto"
+                      >
+                        🔍
+                      </button>
+                    </div>
+                    {showAmountFilter && (
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={minAmount}
+                          onChange={(e) => setMinAmount(e.target.value)}
+                          className="px-2 py-1 w-20 bg-admin-bg rounded border border-gray-600 focus:border-admin-primary focus:outline-none text-sm text-white"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={maxAmount}
+                          onChange={(e) => setMaxAmount(e.target.value)}
+                          className="px-2 py-1 w-20 bg-admin-bg rounded border border-gray-600 focus:border-admin-primary focus:outline-none text-sm text-white"
+                        />
+                      </div>
+                    )}
+                  </th>
+                  <th className="text-left py-4 px-6 text-gray-400 font-medium">
+                    <div className="flex items-center gap-2">
+                      Usuario
+                      <button
+                        onClick={() => setShowUserFilter(!showUserFilter)}
+                        className="text-gray-500 hover:text-admin-primary transition-colors"
+                        title="Filtrar por usuario"
+                      >
+                        🔍
+                      </button>
+                    </div>
+                    {showUserFilter && (
+                      <input
+                        type="text"
+                        placeholder="Buscar usuario..."
+                        value={searchUser}
+                        onChange={(e) => setSearchUser(e.target.value)}
+                        className="mt-2 px-3 py-1 w-full bg-admin-bg rounded border border-gray-600 focus:border-admin-primary focus:outline-none text-sm text-white"
+                      />
+                    )}
+                  </th>
+                  <th className="text-left py-4 px-6 text-gray-400 font-medium">
+                    <div className="flex items-center gap-2">
+                      Ubicación
+                      <button
+                        onClick={() => setShowLocationFilter(!showLocationFilter)}
+                        className="text-gray-500 hover:text-admin-primary transition-colors"
+                        title="Filtrar por ubicación"
+                      >
+                        🔍
+                      </button>
+                    </div>
+                    {showLocationFilter && (
+                      <input
+                        type="text"
+                        placeholder="Buscar ubicación..."
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                        className="mt-2 px-3 py-1 w-full bg-admin-bg rounded border border-gray-600 focus:border-admin-primary focus:outline-none text-sm text-white"
+                      />
+                    )}
+                  </th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Fecha/Hora</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Estado</th>
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">Autenticación</th>
@@ -150,8 +281,8 @@ export default function TransactionsPage() {
                     <td className="py-4 px-6 text-sm">
                       {tx.violations.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {tx.violations.slice(0, 2).map((v, i) => (
-                            <span key={i} className="px-2 py-1 bg-gray-700 rounded text-xs">
+                          {tx.violations.slice(0, 2).map((v) => (
+                            <span key={v} className="px-2 py-1 bg-gray-700 rounded text-xs">
                               {translateViolation(v)}
                             </span>
                           ))}

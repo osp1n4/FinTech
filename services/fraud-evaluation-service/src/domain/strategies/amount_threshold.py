@@ -67,11 +67,14 @@ class AmountThresholdStrategy(FraudStrategy):
         # Nota del desarrollador:
         # La IA sugirió if/else anidado. Lo simplifiqué usando retornos tempranos
         # (guard clauses) para mejorar legibilidad y cumplir con "Flat is better than nested".
-        if transaction.amount > self.threshold:
+        # Usar valor absoluto para validar transferencias (negativas) y depósitos (positivos)
+        amount_abs = abs(transaction.amount)
+        
+        if amount_abs > self.threshold:
             return {
                 "risk_level": RiskLevel.HIGH_RISK,
                 "reasons": ["amount_threshold_exceeded"],
-                "details": f"amount: {transaction.amount} exceeds threshold: {self.threshold}",
+                "details": f"amount: {amount_abs} exceeds threshold: {self.threshold}",
             }
 
         return {"risk_level": RiskLevel.LOW_RISK, "reasons": [], "details": ""}

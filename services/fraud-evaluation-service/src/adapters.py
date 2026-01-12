@@ -82,7 +82,9 @@ class MongoDBAdapter(TransactionRepository):
                 "longitude": evaluation.location.longitude
             } if evaluation.location else None,
             "user_authenticated": evaluation.user_authenticated,
-            "user_auth_timestamp": evaluation.user_auth_timestamp
+            "user_auth_timestamp": evaluation.user_auth_timestamp,
+            "transaction_type": evaluation.transaction_type,
+            "description": evaluation.description,
         }
         self.evaluations.insert_one(document)
 
@@ -175,7 +177,9 @@ class MongoDBAdapter(TransactionRepository):
             reviewed_by=document.get("reviewed_by"),
             reviewed_at=document.get("reviewed_at"),
             user_authenticated=document.get("user_authenticated"),
-            user_auth_timestamp=document.get("user_auth_timestamp")
+            user_auth_timestamp=document.get("user_auth_timestamp"),
+            transaction_type=document.get("transaction_type"),
+            description=document.get("description"),
         )
 
 
