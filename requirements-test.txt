@@ -6,8 +6,9 @@ pytest-mock==3.12.0
 pytest-xdist==3.5.0  # Para tests en paralelo
 
 # Dependencias del proyecto necesarias para tests
-fastapi==0.104.1
-httpx==0.25.2  # Para TestClient de FastAPI
+fastapi==0.109.1
+starlette==0.35.1
+httpx==0.27.2  # Para TestClient de FastAPI
 pymongo==4.6.0
 redis==5.0.1
 pika==1.3.2
