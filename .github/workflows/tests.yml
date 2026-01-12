@@ -113,7 +113,7 @@ jobs:
     - name: Start services
       run: |
         cd ..
-        docker-compose up -d
+        docker compose up -d
         sleep 30
     
     - name: Run E2E tests
@@ -130,4 +130,4 @@ jobs:
       if: always()
       run: |
         cd ..
-        docker-compose down
+        docker compose down
