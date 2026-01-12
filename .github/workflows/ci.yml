@@ -83,6 +83,9 @@ jobs:
       - name: Instalar dependencias
         run: poetry install
 
+      - name: Configurar PYTHONPATH
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
       - name: Ejecutar tests unitarios
         run: |
           poetry run pytest tests/unit/ -v --tb=short
