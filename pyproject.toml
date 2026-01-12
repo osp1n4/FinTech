@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Motor de detección de fraude con Clean Architecture y SOLID"
 authors = ["María Gutiérrez <maria.gutierrezn@example.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
