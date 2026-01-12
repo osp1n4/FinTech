@@ -128,7 +128,9 @@ jobs:
             -Dsonar.projectKey=fraud-detection-engine
             -Dsonar.sources=services
             -Dsonar.tests=tests
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/htmlcov/**,**/__pycache__/**,**/*.pyc,**/venv/**,**/.venv/**,**/*.egg-info/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.python.version=3.11
       
       - name: SonarQube Quality Gate check
         uses: sonarsource/sonarqube-quality-gate-action@master
