@@ -30,8 +30,9 @@ test.describe('00-Conectividad', () => {
       } else {
         console.log('⚠️  Health check no disponible, pero API responde');
       }
-    } catch (error) {
-      console.log('⚠️  Health check endpoint no implementado (esperado)');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log('⚠️  Health check endpoint no implementado (esperado):', errorMessage);
     }
   });
 });

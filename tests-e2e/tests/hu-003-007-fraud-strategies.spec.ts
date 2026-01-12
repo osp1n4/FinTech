@@ -21,7 +21,7 @@ const API_BASE_URL = process.env.API_URL || 'http://localhost:8000';
 test.describe('Estrategias de Detección de Fraude', () => {
 
   test.beforeAll(async () => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   test('TC-HU-003-01: Monto bajo dentro del umbral', async ({ request }) => {

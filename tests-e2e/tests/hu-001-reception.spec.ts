@@ -15,7 +15,7 @@ test.describe('HU-001: Recepción de Transacciones por API', () => {
 
   test.beforeAll(async () => {
     // Esperar a que el API esté disponible
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   test('TC-HU-001-01: Recepción exitosa de transacción válida', async ({ request }) => {

@@ -102,23 +102,22 @@ class RapidTransactionStrategy(FraudStrategy):
                 "details": "Could not check rapid transactions"
             }
     
-    def get_reason(self, transaction: Transaction, risk_level: RiskLevel) -> str:
+    def get_reason(self, risk_level: RiskLevel) -> str:
         """
         Retorna la razón del nivel de riesgo asignado.
         
         Args:
-            transaction: La transacción evaluada
             risk_level: El nivel de riesgo asignado
             
         Returns:
             str: Descripción del motivo del riesgo
         """
-        if risk_level == RiskLevel.HIGH:
+        if risk_level == RiskLevel.HIGH_RISK:
             return (
                 f"Se detectaron más de {self.max_transactions} transacciones "
                 f"en {self.window_minutes} minutos"
             )
-        elif risk_level == RiskLevel.MEDIUM:
+        elif risk_level == RiskLevel.MEDIUM_RISK:
             return (
                 f"Se detectaron {self.max_transactions} transacciones "
                 f"en {self.window_minutes} minutos (límite alcanzado)"

@@ -120,12 +120,12 @@ class UnusualTimeStrategy(FraudStrategy):
         """
         current_hour = transaction.timestamp.hour
         
-        if risk_level == RiskLevel.HIGH:
+        if risk_level == RiskLevel.HIGH_RISK:
             return (
                 f"Transacción a las {current_hour}:00 es muy inusual "
                 f"según el patrón histórico del usuario"
             )
-        elif risk_level == RiskLevel.MEDIUM:
+        elif risk_level == RiskLevel.MEDIUM_RISK:
             return (
                 f"Transacción a las {current_hour}:00 es moderadamente inusual "
                 f"según el patrón histórico del usuario"
@@ -156,8 +156,8 @@ class UnusualTimeStrategy(FraudStrategy):
             
             return filtered_data
             
-        except Exception as e:
-            print(f"Error obteniendo historial: {e}")
+        except Exception as exc:
+            print(f"Error obteniendo historial: {exc}")
             return []
     
     def _analyze_hourly_pattern(self, transactions: list) -> Dict[int, int]:
@@ -185,7 +185,7 @@ class UnusualTimeStrategy(FraudStrategy):
                 
                 hourly_counts[hour] += 1
                 
-            except Exception as e:
+            except Exception:
                 continue
         
         return dict(hourly_counts)

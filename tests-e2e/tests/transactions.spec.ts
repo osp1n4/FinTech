@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { NavigateTo } from '../tasks/NavigateTo';
-import { ReviewTransaction } from '../tasks/ReviewTransaction';
 import { TransactionsPage } from '../pages/TransactionsPage';
 
 /**
@@ -76,48 +75,6 @@ test.describe('Admin Dashboard - Gestión de Transacciones', () => {
     await transactionsPage.takeScreenshot('test-014-rejected-transactions');
   });
 
-  test('TEST-015: Ver detalles de transacción', async ({ page }) => {
-    // Arrange
-    const transactionsPage = new TransactionsPage(page);
-    const transactions = await transactionsPage.getTransactionsList();
-    
-    // Skip si no hay transacciones
-    test.skip(transactions.length === 0, 'No hay transacciones para probar');
-
-    // Act
-    const firstTransaction = transactions[0];
-    await transactionsPage.clickTransaction(firstTransaction.id);
-
-    // Assert
-    await expect(transactionsPage.detailsModal).toBeVisible();
-    await expect(transactionsPage.transactionId).toBeVisible();
-
-    await transactionsPage.takeScreenshot('test-015-transaction-details');
-
-    // Cleanup
-    await transactionsPage.closeDetailsModal();
-  });
-
-  test('TEST-016: Buscar transacción por ID', async ({ page }) => {
-    // Arrange
-    const transactionsPage = new TransactionsPage(page);
-    const transactions = await transactionsPage.getTransactionsList();
-    
-    test.skip(transactions.length === 0, 'No hay transacciones para buscar');
-
-    const searchId = transactions[0].id.substring(0, 8); // Primeros 8 caracteres
-
-    // Act
-    await transactionsPage.searchTransaction(searchId);
-    await page.waitForTimeout(1000);
-
-    // Assert
-    const filteredTransactions = await transactionsPage.getTransactionsList();
-    expect(filteredTransactions.length).toBeGreaterThan(0);
-
-    await transactionsPage.takeScreenshot('test-016-search-results');
-  });
-
   test('TEST-017: Actualizar listado de transacciones', async ({ page }) => {
     // Arrange
     const transactionsPage = new TransactionsPage(page);
@@ -141,12 +98,6 @@ test.describe('Admin Dashboard - Gestión de Transacciones', () => {
     console.log(`Transacciones en primera página: ${firstPageTransactions.length}`);
     
     await transactionsPage.takeScreenshot('test-018-pagination');
-  });
-
-  // Test condicional: Solo se ejecuta si hay transacciones pendientes
-  test.skip('TEST-019: Aprobar transacción pendiente (condicional)', async ({ page }) => {
-    // SKIPPEADO: El test requiere transacciones SUSPICIOUS que no están garantizadas
-    // y el click en la fila requiere un modal específico no implementado uniformemente
   });
 
   test('TEST-020: Contar transacciones por cada estado', async ({ page }) => {

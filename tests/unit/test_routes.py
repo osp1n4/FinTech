@@ -16,7 +16,7 @@ from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime
 from decimal import Decimal
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from starlette.testclient import TestClient
 
 
 @pytest.fixture
@@ -196,7 +196,8 @@ def app(mock_use_cases, mock_repository):  # NOSONAR - Fixture de testing con m√
 @pytest.fixture
 def client(app):
     """Cliente de prueba para la API."""
-    return TestClient(app)
+    with TestClient(app) as test_client:
+        yield test_client
 
 
 class TestTransactionEvaluationEndpoint:

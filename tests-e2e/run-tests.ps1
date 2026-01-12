@@ -6,7 +6,7 @@ Write-Host ""
 
 # 1. Verificar que Docker esté corriendo
 Write-Host "📦 Verificando servicios Docker..." -ForegroundColor Yellow
-$dockerRunning = docker ps 2>$null
+$null = docker ps 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Docker no está corriendo. Iniciando servicios..." -ForegroundColor Red
     docker-compose up -d

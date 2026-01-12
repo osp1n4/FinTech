@@ -54,7 +54,8 @@ export class UserDashboardPage extends BasePage {
    * Navegar a la página de usuario
    */
   async navigate(): Promise<void> {
-    await this.goto('http://localhost:5173');
+    const userAppUrl = process.env.USER_APP_URL || 'http://localhost:3000';
+    await this.goto(userAppUrl);
     await this.waitForLoadingComplete();
   }
 

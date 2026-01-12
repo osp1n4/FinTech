@@ -11,6 +11,7 @@ services:
     ports:
       - "27017:27017"
     environment:
+      # DEVELOPMENT ONLY - Change password in production and use secrets management
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: fraud2026
     volumes:

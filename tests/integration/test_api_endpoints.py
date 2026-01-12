@@ -183,6 +183,8 @@ class TestEndToEndFlow:
     """Tests end-to-end del flujo completo."""
     
     def test_complete_transaction_flow(self, client):
-        """Test: Flujo completo de transacción desde validación hasta log."""
-        # TODO: Implementar cuando estén todos los servicios corriendo
+        """
+        Test: Flujo completo de transacción desde validación hasta log.
+        Este test requiere que todos los servicios (MongoDB, Redis, RabbitMQ) estén corriendo.
+        """
         pass

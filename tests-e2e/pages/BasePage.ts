@@ -80,10 +80,10 @@ export class BasePage {
    * Tomar screenshot con nombre personalizado
    */
   async takeScreenshot(name: string): Promise<void> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-');
     await this.page.screenshot({ 
       path: `screenshots/${name}-${timestamp}.png`,
-      fullPage: true 
+      fullPage: false  // Cambiado a false para evitar error de 32767 píxeles
     });
   }
 

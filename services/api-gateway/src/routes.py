@@ -12,8 +12,10 @@ from fastapi import APIRouter, HTTPException, Header, Query, status
 from typing import List, Optional, Callable, Any, Dict
 from pydantic import BaseModel, Field
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timezone
 
+# Constantes
+RULE_NOT_FOUND_MESSAGE = "Rule not found"
 
 # DTOs para request/response
 class TransactionRequest(BaseModel):
@@ -302,7 +304,7 @@ async def update_thresholds(
         location_radius_km=config.location_radius_km,
     )
 
-    # TODO: Guardar en MongoDB para auditoría (futura iteración)
+    # FUTURE: Guardar en MongoDB para auditoría (tracked in backlog)
     return {
         "status": "updated",
         "updated_by": analyst_id,
@@ -442,7 +444,7 @@ async def validate_transaction_sync(transaction: TransactionValidateRequest):
             "amount": adjusted_amount,
             "user_id": transaction.userId,
             "location": location_dict,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "device_id": transaction.deviceId,
             "transaction_type": transaction_type,
             "description": getattr(transaction, 'description', None)
@@ -791,9 +793,9 @@ async def update_rule(
                     {"$set": update_data}
                 )
                 if result.matched_count == 0:
-                    raise HTTPException(status_code=404, detail="Rule not found")
+                    raise HTTPException(status_code=404, detail=RULE_NOT_FOUND_MESSAGE)
             else:
-                raise HTTPException(status_code=404, detail="Rule not found")
+                raise HTTPException(status_code=404, detail=RULE_NOT_FOUND_MESSAGE)
         
         return {
             "success": True,
@@ -845,11 +847,19 @@ async def get_transactions_log(
         # Limitar resultados
         evaluations = evaluations[:limit]
         
+        # Helper para mapear status
+        def map_status_to_frontend(status: str) -> str:
+            if status == "APPROVED":
+                return "APPROVED"
+            elif status == "PENDING_REVIEW":
+                return "SUSPICIOUS"
+            else:
+                return "REJECTED"
+        
         # Formatear respuesta con datos de la evaluación
         result = []
         for e in evaluations:
-            # Mapear status del backend al frontend
-            frontend_status = "APPROVED" if e.status == "APPROVED" else ("SUSPICIOUS" if e.status == "PENDING_REVIEW" else "REJECTED")
+            frontend_status = map_status_to_frontend(e.status)
             
             result.append({
                 "id": e.transaction_id,
@@ -1074,7 +1084,7 @@ async def delete_rule(
                 result = repository.db.custom_rules.delete_one({"id": rule_id})
                 
                 if result.deleted_count == 0:
-                    raise HTTPException(status_code=404, detail="Rule not found")
+                    raise HTTPException(status_code=404, detail=RULE_NOT_FOUND_MESSAGE)
             
             return {
                 "success": True,

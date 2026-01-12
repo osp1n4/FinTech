@@ -9,12 +9,12 @@ import { test, expect } from '@playwright/test';
  */
 
 const API_BASE_URL = process.env.API_URL || 'http://localhost:8000';
-const ADMIN_DASHBOARD_URL = process.env.ADMIN_URL || 'http://localhost:5174';
+const ADMIN_DASHBOARD_URL = process.env.ADMIN_URL || 'http://localhost:3001';
 
 test.describe('HU-012: Revisión Manual por Analista', () => {
 
   test.beforeAll(async () => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   test('TC-HU-012-01: Aprobación manual exitosa', async ({ request, page }) => {
@@ -124,7 +124,7 @@ test.describe('HU-012: Revisión Manual por Analista', () => {
       id: `txn_reject_${Date.now()}`,
       user_id: 'user_fraud_suspect',
       amount: 9999.99,
-      location: { latitude: 40.7128, longitude: -74.0060 }, // Nueva York - ubicación inusual
+      location: { latitude: 40.7128, longitude: -74.006 }, // Nueva York - ubicación inusual
       timestamp: new Date().toISOString()
     };
 

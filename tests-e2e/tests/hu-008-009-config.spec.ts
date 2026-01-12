@@ -14,7 +14,7 @@ const API_BASE_URL = process.env.API_URL || 'http://localhost:8000';
 test.describe('HU-008 y HU-009: Configuración Dinámica', () => {
 
   test.beforeAll(async () => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   test('TC-HU-008-01: Actualización exitosa de umbral', async ({ request }) => {

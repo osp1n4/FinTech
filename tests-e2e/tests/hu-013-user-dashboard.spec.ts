@@ -9,12 +9,12 @@ import { test, expect } from '@playwright/test';
  */
 
 const API_BASE_URL = process.env.API_URL || 'http://localhost:8000';
-const USER_APP_URL = process.env.USER_APP_URL || 'http://localhost:5173';
+const USER_APP_URL = process.env.USER_APP_URL || 'http://localhost:3000';
 
 test.describe('HU-013: Dashboard Usuario - Historial de Transacciones', () => {
 
   test.beforeAll(async () => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   test('TC-HU-013-01: Consulta de historial propio', async ({ page, request }) => {
@@ -40,7 +40,7 @@ test.describe('HU-013: Dashboard Usuario - Historial de Transacciones', () => {
       });
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Paso 2: Consultar historial mediante API (simulando autenticación)
     const historyResponse = await request.get(`${API_BASE_URL}/audit/user/${userId}`, {
@@ -157,32 +157,6 @@ test.describe('HU-013: Dashboard Usuario - Historial de Transacciones', () => {
       console.log('   Retorna todas las transacciones sin filtrar:', filteredTransactions.length);
     } else {
       console.log('⚠️  TC-HU-013-03 SKIPPED: Endpoint de filtrado no disponible');
-    }
-  });
-
-  test.skip('TC-HU-013-04: Verificar información completa en el frontend', async ({ page }) => {
-    // Este test requiere que el frontend esté corriendo en localhost:5173
-    // Para ejecutarlo: cd frontend/user-app && npm run dev
-    // Navegar a la aplicación de usuario
-    await page.goto(USER_APP_URL);
-
-    // Esperar a que cargue la página
-    await page.waitForLoadState('networkidle');
-
-    // Verificar que se muestra el título correcto
-    const pageTitle = await page.locator('h1, h2').first().textContent();
-    expect(pageTitle).toBeTruthy();
-
-    // Buscar tabla o lista de transacciones
-    const transactionsExist = await page.locator('[data-testid="transactions-list"], table, .transaction-item').count() > 0;
-    
-    if (transactionsExist) {
-      console.log('✅ TC-HU-013-04 PASSED: Frontend carga correctamente');
-      
-      // Tomar screenshot
-      await page.screenshot({ path: 'screenshots/tc-hu-013-04-user-dashboard.png', fullPage: true });
-    } else {
-      console.log('⚠️  TC-HU-013-04: No se encontraron transacciones en el frontend (puede ser estado inicial vacío)');
     }
   });
 });

@@ -13,7 +13,7 @@ const API_BASE_URL = process.env.API_URL || 'http://localhost:8000';
 test.describe('HU-002: Auditoría Inmutable de Evaluaciones', () => {
 
   test.beforeAll(async () => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   test('TC-HU-002-01: Registro automático en auditoría', async ({ request }) => {
