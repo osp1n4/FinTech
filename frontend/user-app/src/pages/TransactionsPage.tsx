@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Card } from '../components/ui/Card';
 import { getUserTransactions, authenticateTransaction } from '../services/api';
 import { useUser } from '../context/UserContext';
+import { translateViolation } from '../utils/translations';
+import { useToast } from '../components/ToastContainer';
 
 interface Transaction {
   id: string;
@@ -45,16 +47,21 @@ export function TransactionsPage() {
     loadTransactions();
   }, [userId]); // Recargar cuando cambie el userId
 
+  const { add } = useToast();
+
   const handleAuthenticate = async (transactionId: string, confirmed: boolean) => {
     try {
       setAuthenticating(transactionId);
       await authenticateTransaction(transactionId, confirmed);
       await loadTransactions(); // Recargar lista
-      alert(confirmed 
-        ? '✓ Confirmaste que fuiste tú. Un analista revisará pronto.' 
-        : '✗ Gracias por alertarnos. Bloquearemos esta transacción.');
+      add(confirmed 
+        ? 'Confirmaste que fuiste tú. Un analista revisará pronto.' 
+        : 'Gracias por alertarnos. Bloquearemos esta transacción.',
+        confirmed ? 'success' : 'warning',
+        confirmed ? 'Autenticación confirmada' : 'Transacción reportada'
+      );
     } catch (err) {
-      alert('Error al autenticar transacción');
+      add('Error al autenticar transacción', 'error', 'Error');
       console.error(err);
     } finally {
       setAuthenticating(null);
@@ -180,8 +187,8 @@ export function TransactionsPage() {
                       <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                         <p className="text-xs font-medium text-orange-800 mb-2">MOTIVOS:</p>
                         <ul className="text-sm text-orange-700 space-y-1">
-                          {tx.violations.map((v, i) => (
-                            <li key={i}>• {v}</li>
+                          {tx.violations.map((v) => (
+                            <li key={`${tx.transactionId || tx.id}-${v}`}>• {translateViolation(v)}</li>
                           ))}
                         </ul>
                       </div>
@@ -192,6 +199,7 @@ export function TransactionsPage() {
                       <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
                         <p className="font-bold text-yellow-900 mb-3 flex items-center">
                           <span className="text-2xl mr-2">⚠️</span>
+                          {' '}
                           ¿Realizaste esta transacción?
                         </p>
                         <p className="text-sm text-yellow-800 mb-4">

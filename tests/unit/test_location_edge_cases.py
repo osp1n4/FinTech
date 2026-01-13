@@ -10,7 +10,13 @@ Copilot generó estos tests automáticamente. Los revisé y agregué
 algunos casos adicionales específicos para Colombia y casos de uso real.
 """
 import pytest
-from services.shared.domain.models import Location
+import sys
+from pathlib import Path
+
+# Agregar path al servicio (sin /src)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "services" / "fraud-evaluation-service"))
+
+from src.domain.models import Location
 
 
 class TestLocationEdgeCases:
@@ -20,28 +26,28 @@ class TestLocationEdgeCases:
     def test_north_pole_coordinates(self):
         """Test: North Pole (90°N) debe ser válido."""
         loc = Location(latitude=90.0, longitude=0.0)
-        assert loc.latitude == 90.0
+        assert abs(loc.latitude - 90.0) < 1e-9
     
     def test_south_pole_coordinates(self):
         """Test: South Pole (-90°S) debe ser válido."""
         loc = Location(latitude=-90.0, longitude=0.0)
-        assert loc.latitude == -90.0
+        assert abs(loc.latitude - (-90.0)) < 1e-9
     
     def test_equator_prime_meridian(self):
         """Test: Null Island (0°, 0°) debe ser válido."""
         loc = Location(latitude=0.0, longitude=0.0)
-        assert loc.latitude == 0.0
-        assert loc.longitude == 0.0
+        assert abs(loc.latitude - 0.0) < 1e-9
+        assert abs(loc.longitude - 0.0) < 1e-9
     
     def test_antimeridian_east(self):
         """Test: Antimeridian east (180°) debe ser válido."""
         loc = Location(latitude=0.0, longitude=180.0)
-        assert loc.longitude == 180.0
+        assert abs(loc.longitude - 180.0) < 1e-9
     
     def test_antimeridian_west(self):
         """Test: Antimeridian west (-180°) debe ser válido."""
         loc = Location(latitude=0.0, longitude=-180.0)
-        assert loc.longitude == -180.0
+        assert abs(loc.longitude - (-180.0)) < 1e-9
     
     # GENERATED WITH COPILOT: Precision edge cases
     def test_high_precision_gps_coordinates(self):
@@ -53,8 +59,8 @@ class TestLocationEdgeCases:
     def test_maximum_precision_coordinates(self):
         """Test: Debe manejar máxima precisión de Decimal."""
         loc = Location(latitude=4.71100501234567, longitude=-74.07209201234567)
-        assert loc.latitude == 4.71100501234567
-        assert loc.longitude == -74.07209201234567
+        assert abs(loc.latitude - 4.71100501234567) < 1e-9
+        assert abs(loc.longitude - (-74.07209201234567)) < 1e-9
     
     # GENERATED WITH COPILOT: Boundary violations
     def test_just_over_max_latitude(self):
@@ -98,32 +104,32 @@ class TestLocationEdgeCases:
         """Test: Coordenadas de ciudades principales de Colombia."""
         # Bogotá
         bogota = Location(latitude=4.7110, longitude=-74.0721)
-        assert bogota.latitude == 4.7110
+        assert abs(bogota.latitude - 4.7110) < 1e-9
         
         # Medellín
         medellin = Location(latitude=6.2442, longitude=-75.5812)
-        assert medellin.latitude == 6.2442
+        assert abs(medellin.latitude - 6.2442) < 1e-9
         
         # Cali
         cali = Location(latitude=3.4516, longitude=-76.5320)
-        assert cali.latitude == 3.4516
+        assert abs(cali.latitude - 3.4516) < 1e-9
         
         # Barranquilla
         barranquilla = Location(latitude=10.9685, longitude=-74.7813)
-        assert barranquilla.latitude == 10.9685
+        assert abs(barranquilla.latitude - 10.9685) < 1e-9
     
     # GENERATED WITH COPILOT: Special numeric values
     def test_zero_coordinates(self):
         """Test: Coordenadas (0, 0) deben ser válidas."""
         loc = Location(latitude=0.0, longitude=0.0)
-        assert loc.latitude == 0.0
-        assert loc.longitude == 0.0
+        assert abs(loc.latitude - 0.0) < 1e-9
+        assert abs(loc.longitude - 0.0) < 1e-9
     
     def test_negative_zero_coordinates(self):
         """Test: -0.0 debe ser tratado igual que 0.0."""
         loc = Location(latitude=-0.0, longitude=-0.0)
-        assert loc.latitude == 0.0
-        assert loc.longitude == 0.0
+        assert abs(loc.latitude - 0.0) < 1e-9
+        assert abs(loc.longitude - 0.0) < 1e-9
     
     # GENERATED WITH COPILOT: Type validation
     def test_none_latitude_raises_error(self):
@@ -151,8 +157,8 @@ class TestLocationEdgeCases:
         loc2 = Location(latitude=35.6762, longitude=139.6503)
         
         # Ambas ubicaciones deben ser válidas
-        assert loc1.latitude == 4.7110
-        assert loc2.latitude == 35.6762
+        assert abs(loc1.latitude - 4.7110) < 1e-9
+        assert abs(loc2.latitude - 35.6762) < 1e-9
         
         # La lógica de "viaje imposible" se maneja en otra capa
         # Aquí solo validamos que las coordenadas son válidas

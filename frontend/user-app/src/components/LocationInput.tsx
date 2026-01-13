@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToast } from './ToastContainer';
 
 interface LocationInputProps {
   value: string;
@@ -15,10 +16,11 @@ export const LocationInput: React.FC<LocationInputProps> = ({
 }) => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationMethod, setLocationMethod] = useState<'gps' | 'manual'>('manual');
+  const { add } = useToast();
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert('Tu navegador no soporta geolocalizacion');
+      add('Tu navegador no soporta geolocalizacion', 'error', 'Geolocalización no disponible');
       return;
     }
 
@@ -36,7 +38,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
       },
       (error) => {
         console.error('Error getting location:', error);
-        alert('No se pudo obtener la ubicacion. Asegurate de dar permiso al navegador.');
+        add('No se pudo obtener la ubicacion. Asegurate de dar permiso al navegador.', 'warning', 'Error al obtener ubicación');
         setIsGettingLocation(false);
       },
       {

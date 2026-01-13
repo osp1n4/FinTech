@@ -11,8 +11,10 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: fraud2026
+      # ⚠️ Usar secrets en producción (Docker Secrets, Azure Key Vault, etc.)
+      # Configurar mediante archivo .env
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:?Variable MONGODB_PASSWORD requerida}
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -46,8 +48,10 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: fraud
-      RABBITMQ_DEFAULT_PASS: fraud2026
+      # ⚠️ Usar secrets en producción (Docker Secrets, Azure Key Vault, etc.)
+      # Configurar mediante archivo .env
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-fraud}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Variable RABBITMQ_PASSWORD requerida}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -65,10 +69,19 @@ services:
     container_name: fraud-api
     ports:
       - "8000:8000"
+    volumes:
+      # Volúmenes para desarrollo y testing
+      - ./services:/app/services
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini
+      - ./requirements-test.txt:/app/requirements-test.txt
     environment:
-      MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
-      REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+      # ⚠️ Las credenciales deben configurarse mediante archivo .env
+      # En producción usar secretos seguros (Azure Key Vault, etc.)
+      MONGODB_URL: ${MONGODB_URL:?Variable MONGODB_URL requerida}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      RABBITMQ_URL: ${RABBITMQ_URL:?Variable RABBITMQ_URL requerida}
+      PYTHONPATH: /app
     depends_on:
       mongodb:
         condition: service_healthy
@@ -84,10 +97,19 @@ services:
       context: .
       dockerfile: services/worker-service/Dockerfile
     container_name: fraud-worker
+    volumes:
+      # Volúmenes para desarrollo y testing
+      - ./services:/app/services
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini
+      - ./requirements-test.txt:/app/requirements-test.txt
     environment:
-      MONGODB_URL: mongodb://admin:fraud2026@mongodb:27017
-      REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://fraud:fraud2026@rabbitmq:5672
+      # ⚠️ Las credenciales deben configurarse mediante archivo .env
+      # En producción usar secretos seguros (Azure Key Vault, etc.)
+      MONGODB_URL: ${MONGODB_URL:?Variable MONGODB_URL requerida}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      RABBITMQ_URL: ${RABBITMQ_URL:?Variable RABBITMQ_URL requerida}
+      PYTHONPATH: /app
     depends_on:
       mongodb:
         condition: service_healthy

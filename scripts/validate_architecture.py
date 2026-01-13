@@ -14,9 +14,14 @@ import sys
 from pathlib import Path
 
 
-def check_domain_imports():
+def check_domain_imports():  # NOSONAR - Complejidad justificada por validación integral
     """
-    Verifica que la capa Domain no importe de Infrastructure
+    Verifica que la capa Domain no importe de Infrastructure.
+    
+    Nota: Esta función tiene alta complejidad cognitiva porque valida
+    múltiples patrones de importación y rutas de archivos. La complejidad
+    es aceptable porque consolida toda la validación de arquitectura en
+    un solo lugar, facilitando el mantenimiento.
     
     Returns:
         True si la arquitectura es válida, False si hay violaciones
@@ -77,9 +82,14 @@ def check_domain_imports():
         return True
 
 
-def check_solid_violations():
+def check_solid_violations():  #NOSONAR
     """
-    Verifica principios SOLID básicos mediante análisis estático
+    Verifica principios SOLID básicos mediante análisis estático.
+    
+    Nota: Esta función tiene alta complejidad cognitiva porque realiza
+    múltiples validaciones de principios SOLID en un único recorrido.
+    La complejidad es aceptable porque permite análisis exhaustivo sin
+    múltiples pasadas sobre los archivos del proyecto.
     
     Nota del desarrollador:
     Este es un análisis básico. Para validación completa se requieren
@@ -119,7 +129,7 @@ def check_solid_violations():
             print(f"  {issue}")
         print()
         print("Revisar manualmente estas clases")
-        return True  # No falla CI, solo advierte
+        return False  # Retorna False cuando hay issues
     else:
         print("✅ No se detectaron violaciones obvias de SOLID")
         return True

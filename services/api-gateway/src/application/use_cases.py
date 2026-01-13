@@ -81,6 +81,9 @@ class EvaluateTransactionUseCase:
         """
         # 1. Convertir datos a entidad Transaction
         transaction = self._build_transaction_from_data(transaction_data)
+        
+        # DEBUG
+        print(f"[USE_CASE] Transaction created - device_id: {transaction.device_id}")
 
         # 2. Obtener ubicación histórica del usuario (si existe)
         historical_location = await self._get_historical_location(transaction.user_id)
@@ -125,7 +128,7 @@ class EvaluateTransactionUseCase:
             await self.publisher.publish_for_manual_review(
                 {
                     "transaction_id": transaction.id,
-                    "risk_level": max_risk_level.value,
+                    "risk_level": max_risk_level.name,
                     "reasons": all_reasons,
                     "amount": float(transaction.amount),
                     "user_id": transaction.user_id,
@@ -135,7 +138,7 @@ class EvaluateTransactionUseCase:
         # 8. Retornar resultado
         return {
             "transaction_id": transaction.id,
-            "risk_level": max_risk_level.value,
+            "risk_level": max_risk_level.name,
             "reasons": all_reasons,
             "status": evaluation.status,
         }
@@ -162,12 +165,16 @@ class EvaluateTransactionUseCase:
             else:
                 timestamp = datetime.now()
 
+            # DEBUG
+            print(f"[USE_CASE] Building Transaction - device_id from data: {data.get('device_id')}")
+
             return Transaction(
                 id=data["id"],
                 amount=Decimal(str(data["amount"])),
                 user_id=data["user_id"],
                 location=location,
                 timestamp=timestamp,
+                device_id=data.get("device_id"),
             )
         except KeyError as e:
             raise ValueError(f"Missing required field: {e}")

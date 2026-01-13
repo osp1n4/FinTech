@@ -25,6 +25,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     userId: userId,
     location: '', // Vacío para que el usuario ingrese o use GPS
     deviceId: deviceId,
+    transactionType: 'transfer',
+    description: '',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TransactionRequest, string>>>({});
@@ -57,6 +59,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       newErrors.deviceId = 'El ID del dispositivo es requerido';
     }
 
+    if (!formData.description?.trim()) {
+      newErrors.description = 'La descripción es requerida';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -71,7 +77,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const handleChange = (field: keyof TransactionRequest) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = field === 'amount' ? parseFloat(e.target.value) || 0 : e.target.value;
+    const value = field === 'amount' ? Number.parseFloat(e.target.value) || 0 : e.target.value;
     
     // Si cambia el userId, actualizar el contexto
     if (field === 'userId') {
@@ -130,6 +136,39 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         value={formData.deviceId}
         onChange={handleChange('deviceId')}
         error={errors.deviceId}
+        disabled={isLoading}
+      />
+
+      <div>
+        <label htmlFor="transaction-type-select" className="block text-sm font-medium text-gray-700 mb-2">
+          Tipo de Transacción
+        </label>
+        <select
+          id="transaction-type-select"
+          value={formData.transactionType}
+          onChange={(e) => setFormData(prev => ({ ...prev, transactionType: e.target.value as any }))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-user-primary focus:border-transparent"
+          disabled={isLoading}
+        >
+          <option value="transfer">Transferencia a otra persona</option>
+          <option value="payment">Pago de servicio público</option>
+          <option value="recharge">Recarga de celular</option>
+          <option value="deposit">Depósito</option>
+        </select>
+      </div>
+
+      <Input
+        label="Descripción / Destinatario"
+        type="text"
+        placeholder="Ej: Juan Pérez, Servicio de luz, etc."
+        value={formData.description || ''}
+        onChange={(e) => {
+          setFormData(prev => ({ ...prev, description: e.target.value }));
+          if (errors.description) {
+            setErrors(prev => ({ ...prev, description: undefined }));
+          }
+        }}
+        error={errors.description}
         disabled={isLoading}
       />
 

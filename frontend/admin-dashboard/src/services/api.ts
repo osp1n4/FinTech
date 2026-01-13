@@ -51,9 +51,10 @@ export const reorderRules = async (ruleIds: string[]): Promise<any> => {
 // Transactions
 export const getTransactionsLog = async (
   status?: string,
-  limit: number = 100
+  limit?: number
 ): Promise<Transaction[]> => {
-  const params: any = { limit };
+  const params: any = {};
+  if (limit !== undefined) params.limit = limit;
   if (status) params.status = status;
   const response = await api.get('/api/v1/admin/transactions/log', { params });
   return response.data;

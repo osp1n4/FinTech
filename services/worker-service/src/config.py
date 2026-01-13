@@ -18,18 +18,19 @@ class Settings(BaseSettings):
     Configuración de la aplicación desde variables de entorno
     
     Usa Pydantic para validación automática y valores por defecto
+    IMPORTANTE: No incluir credenciales hardcodeadas por seguridad.
     """
 
-    # MongoDB
-    mongodb_url: str = "mongodb://admin:fraud2026@localhost:27017"
+    # MongoDB - SIN credenciales por defecto (deben venir de variables de entorno)
+    mongodb_url: str
     mongodb_database: str = "fraud_detection"
 
     # Redis
     redis_url: str = "redis://localhost:6379"
     redis_ttl: int = 86400  # 24 horas
 
-    # RabbitMQ
-    rabbitmq_url: str = "amqp://fraud:fraud2026@localhost:5672"
+    # RabbitMQ - SIN credenciales por defecto (deben venir de variables de entorno)
+    rabbitmq_url: str
     rabbitmq_transactions_queue: str = "transactions"
     rabbitmq_manual_review_queue: str = "manual_review"
 

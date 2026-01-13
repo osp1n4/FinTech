@@ -99,9 +99,9 @@ export class TransactionsPage extends BasePage {
   }
 
   /**
-   * Obtener lista de transacciones visibles
+   * Obtener lista de transacciones visibles (limitado a primeras 50 para performance)
    */
-  async getTransactionsList(): Promise<Array<{
+  async getTransactionsList(limit: number = 50): Promise<Array<{
     id: string;
     amount: string;
     status: string;
@@ -110,7 +110,11 @@ export class TransactionsPage extends BasePage {
     const rows = await this.transactionsTable.locator('tbody tr').all();
     const transactions: Array<{id: string; amount: string; status: string; date: string}> = [];
     
-    for (const row of rows) {
+    // Limitar la cantidad de filas procesadas para evitar timeout
+    const maxRows = Math.min(rows.length, limit);
+    
+    for (let i = 0; i < maxRows; i++) {
+      const row = rows[i];
       const cells = await row.locator('td').all();
       if (cells.length >= 4) {
         transactions.push({

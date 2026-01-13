@@ -12,7 +12,9 @@ export const formatCurrency = (amount: number): string => {
  * Genera un ID de usuario aleatorio
  */
 export const generateUserId = (): string => {
-  return `user_${Math.floor(Math.random() * 100000)}`;
+  // Usar crypto.getRandomValues para generar número seguro
+  const randomNum = crypto.getRandomValues(new Uint32Array(1))[0] % 100000;
+  return `user_${randomNum}`;
 };
 
 /**
@@ -30,8 +32,9 @@ export const generateDeviceId = (userId: string): string => {
   // Si no existe, generar uno nuevo y guardarlo
   if (!deviceId) {
     const devices = ['mobile', 'tablet', 'desktop'];
-    const randomDevice = devices[Math.floor(Math.random() * devices.length)];
-    const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const randomIndex = crypto.getRandomValues(new Uint32Array(1))[0] % devices.length;
+    const randomDevice = devices[randomIndex];
+    const randomId = crypto.randomUUID().substring(0, 6).toUpperCase();
     deviceId = `${randomDevice}_${randomId}`;
     
     // Guardar en localStorage para futuras transacciones de este usuario

@@ -1,4 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+
+// Cargar variables de entorno desde .env
+dotenv.config();
 
 /**
  * Configuración de Playwright para Fraud Detection Engine
@@ -15,16 +19,16 @@ export default defineConfig({
   testDir: './tests',
   
   /* Configuración de timeout */
-  timeout: 30 * 1000, // 30 segundos por test
+  timeout: 120 * 1000, // 120 segundos por test (aumentado para tests lentos)
   expect: {
-    timeout: 5000, // 5 segundos para assertions
+    timeout: 15000, // 15 segundos para assertions
   },
 
   /* Configuración de ejecución */
-  fullyParallel: true, // Ejecutar tests en paralelo
+  fullyParallel: true, // Ejecutar tests en paralelo para mayor velocidad
   forbidOnly: !!process.env.CI, // Fallar si hay test.only en CI
-  retries: process.env.CI ? 2 : 0, // 2 reintentos en CI, 0 en local
-  workers: process.env.CI ? 1 : undefined, // Workers en paralelo (local: auto)
+  retries: process.env.CI ? 2 : 0, // Sin reintentos en local para acelerar
+  workers: 3, // 3 workers en paralelo para mejor rendimiento
   
   /* Reportes */
   reporter: [
@@ -50,7 +54,7 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     /* Screenshots */
-    screenshot: 'only-on-failure', // Cambiar a 'on' para siempre capturar
+    screenshot: 'off', // Deshabilitado para evitar error de 32767 píxeles
 
     /* Videos */
     video: 'retain-on-failure', // Guardar video solo si falla

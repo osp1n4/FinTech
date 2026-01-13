@@ -12,15 +12,18 @@ import pika
 import json
 import asyncio
 from decimal import Decimal
-from shared.adapters import (
+from src.adapters import (
     MongoDBAdapter,
     RedisAdapter,
     RabbitMQAdapter,
 )
-from shared.config import settings
-from shared.domain.strategies.amount_threshold import AmountThresholdStrategy
-from shared.domain.strategies.location_check import LocationStrategy
-from shared.application.use_cases import EvaluateTransactionUseCase
+from src.config import settings
+from src.domain.strategies.amount_threshold import AmountThresholdStrategy
+from src.domain.strategies.location_check import LocationStrategy
+from src.domain.strategies.device_validation import DeviceValidationStrategy
+from src.domain.strategies.rapid_transaction import RapidTransactionStrategy
+from src.domain.strategies.unusual_time import UnusualTimeStrategy
+from src.application.use_cases import EvaluateTransactionUseCase
 
 
 def create_use_case() -> EvaluateTransactionUseCase:
@@ -38,6 +41,9 @@ def create_use_case() -> EvaluateTransactionUseCase:
     strategies = [
         AmountThresholdStrategy(threshold=Decimal(str(settings.amount_threshold))),
         LocationStrategy(radius_km=settings.location_radius_km),
+        DeviceValidationStrategy(redis_client=cache.redis_sync),
+        RapidTransactionStrategy(redis_client=cache.redis_sync),
+        UnusualTimeStrategy(audit_repository=repository),
     ]
 
     return EvaluateTransactionUseCase(repository, publisher, cache, strategies)

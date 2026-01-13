@@ -52,3 +52,6 @@ Thumbs.db
 
 # Poetry
 poetry.lock
+
+# Deprecated folders (moved to fraud-evaluation-service)
+services/shared/

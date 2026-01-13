@@ -4,6 +4,7 @@ import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { RiskScoreBar } from './RiskScoreBar';
 import { formatCurrency } from '@/utils/formatters';
+import { translateViolation } from '@/utils/translations';
 import type { TransactionResponse, TransactionRequest } from '@/types/transaction';
 
 interface ResultDisplayProps {
@@ -34,11 +35,11 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           icon: '⚠',
           iconColor: 'text-user-warning',
           iconBg: 'bg-yellow-100',
-          title: 'Transacción en Revisión',
+          title: 'Transacción Sospechosa',
           titleColor: 'text-yellow-700',
           cardBg: 'bg-yellow-50',
           message:
-            'Tu transacción está siendo revisada por nuestro equipo de seguridad. Te notificaremos en las próximas 24 horas.',
+            'Detectamos actividad inusual en esta transacción. Por tu seguridad, necesitamos que confirmes si fuiste tú quien realizó esta operación. Una vez autentiques, nuestro equipo bancario verificará y procesará la transacción. Recibirás una notificación cuando se complete la revisión.',
         };
       case 'REJECTED':
         return {
@@ -139,7 +140,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                   className={`text-sm flex items-start ${config.titleColor}`}
                 >
                   <span className="mr-2">•</span>
-                  <span>{violation}</span>
+                  <span>{translateViolation(violation)}</span>
                 </li>
               ))}
             </ul>

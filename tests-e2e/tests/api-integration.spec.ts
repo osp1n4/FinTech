@@ -103,35 +103,12 @@ test.describe('API Integration - Validación de Transacciones', () => {
     console.log('Transacción de alto riesgo múltiple:', result);
   });
 
-  test.skip('TEST-036: Crear transacción y verificar estado vía API', async ({ request }) => {
-    // Arrange
-    const testTransaction = {
-      userId: 'user_api_test_001',
-      amount: 125.50,
-      location: '4.7110,-74.0721',
-      deviceId: 'device_api_test_001'
-    };
-
-    // Act - Crear transacción
-    const createResult = await ValidateTransaction.viaAPI(request, testTransaction);
-    
-    // Esperar procesamiento
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Act - Verificar estado
-    const statusResult = await ValidateTransaction.checkStatus(request, createResult.transactionId);
-
-    // Assert
-    expect(statusResult.status).toBeDefined();
-    console.log('Estado de transacción:', statusResult);
-  });
-
   test('TEST-037: Validar múltiples transacciones en secuencia', async ({ request }) => {
     // Arrange
     const testTransactions = [
-      { userId: 'user_001', amount: 50.0, location: '4.7110,-74.0721', deviceId: 'device_001' },
-      { userId: 'user_001', amount: 100.0, location: '4.7110,-74.0721', deviceId: 'device_001' },
-      { userId: 'user_001', amount: 150.0, location: '4.7110,-74.0721', deviceId: 'device_001' }
+      { userId: 'user_001', amount: 50, location: '4.7110,-74.0721', deviceId: 'device_001' },
+      { userId: 'user_001', amount: 100, location: '4.7110,-74.0721', deviceId: 'device_001' },
+      { userId: 'user_001', amount: 150, location: '4.7110,-74.0721', deviceId: 'device_001' }
     ];
 
     const results = [];

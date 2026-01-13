@@ -1,6 +1,26 @@
 # Playwright E2E Tests - Fraud Detection Engine
 
-Pruebas End-to-End automatizadas con **Playwright** y patrón **Screenplay**.
+Pruebas End-to-End automatizadas con **Playwright** que cubren **las 14 historias de usuario** documentadas en [TEST_CASES.md](../docs/TEST_CASES.md).
+
+---
+
+## 📊 Cobertura de Tests E2E
+
+| Archivo | HU Cubiertas | Test Cases | Descripción |
+|---------|--------------|------------|-------------|
+| `hu-001-reception.spec.ts` | HU-001 | 3 | Recepción de transacciones por API |
+| `hu-002-audit.spec.ts` | HU-002 | 2 | Auditoría inmutable de evaluaciones |
+| `hu-003-007-fraud-strategies.spec.ts` | HU-003 a HU-007 | 10 | Estrategias de detección de fraude |
+| `hu-008-009-config.spec.ts` | HU-008, HU-009 | 4 | Configuración dinámica |
+| `hu-012-manual-review.spec.ts` | HU-012 | 4 | Revisión manual por analista |
+| `hu-013-user-dashboard.spec.ts` | HU-013 | 4 | Dashboard usuario |
+| `hu-014-admin-metrics.spec.ts` | HU-014 | 5 | Dashboard admin y métricas |
+| `admin-dashboard.spec.ts` | HU-011 | 5 | Gestión de reglas personalizadas |
+| `user-app.spec.ts` | HU-013 | 6 | App de usuario (legacy) |
+| `api-integration.spec.ts` | HU-001 | 5 | Integración API (legacy) |
+| **TOTAL** | **14 HU** | **48** | **Cobertura completa** |
+
+---
 
 ## 📁 Estructura del Proyecto
 
@@ -19,11 +39,18 @@ tests-e2e/
 │   ├── CreateRule.ts            # Tareas de creación de reglas
 │   ├── ReviewTransaction.ts     # Tareas de revisión manual
 │   └── ValidateTransaction.ts   # Tareas de validación de transacciones
-├── tests/                        # Test specs
-│   ├── admin-dashboard.spec.ts  # Tests de dashboard admin (reglas)
+├── tests/                        # Test specs (NUEVOS tests basados en TEST_CASES.md)
+│   ├── hu-001-reception.spec.ts        # HU-001: Recepción API ✅ NUEVO
+│   ├── hu-002-audit.spec.ts            # HU-002: Auditoría ✅ NUEVO
+│   ├── hu-003-007-fraud-strategies.spec.ts # HU-003 a HU-007: Estrategias ✅ NUEVO
+│   ├── hu-008-009-config.spec.ts       # HU-008, HU-009: Config ✅ NUEVO
+│   ├── hu-012-manual-review.spec.ts    # HU-012: Revisión manual ✅ NUEVO
+│   ├── hu-013-user-dashboard.spec.ts   # HU-013: Dashboard usuario ✅ NUEVO
+│   ├── hu-014-admin-metrics.spec.ts    # HU-014: Métricas admin ✅ NUEVO
+│   ├── admin-dashboard.spec.ts  # Tests de dashboard admin (reglas) - HU-011
 │   ├── transactions.spec.ts     # Tests de transacciones (admin)
-│   ├── user-app.spec.ts         # Tests de app usuario
-│   └── api-integration.spec.ts  # Tests de integración API
+│   ├── user-app.spec.ts         # Tests de app usuario - HU-013
+│   └── api-integration.spec.ts  # Tests de integración API - HU-001
 ├── fixtures/                     # Datos de prueba
 │   ├── transactions.json        # Transacciones de ejemplo
 │   └── rules.json               # Reglas de ejemplo

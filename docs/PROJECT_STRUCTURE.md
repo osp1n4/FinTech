@@ -1,306 +1,153 @@
-# 📊 Vista General del Proyecto - Microservicios
+# 📊 Vista General del Proyecto
 
-## 🎯 Proyecto Completamente Reorganizado
-
-El proyecto **Fraud Detection Engine** ahora está organizado en una **arquitectura de microservicios** clara y escalable.
+Este archivo describe **la estructura real del repositorio** tal como está hoy, para evitar confusiones con estructuras “propuestas” o legacy.
 
 ---
 
-## 📁 Estructura Completa
+## 📁 Estructura Principal
 
-```
+```text
 fraud-detection-engine/
-│
-├── 🔷 services/                          # MICROSERVICIOS
-│   │
-│   ├── 📡 api-gateway/                   # Servicio 1: API Gateway
+├── services/                      # Backend (servicios lógicos en un mismo repo)
+│   ├── api-gateway/               # FastAPI expuesta en puerto 8000
 │   │   ├── src/
-│   │   │   ├── routes/                   # Endpoints REST
-│   │   │   │   ├── transactions.py
-│   │   │   │   ├── audit.py
-│   │   │   │   ├── review.py
-│   │   │   │   └── config.py
-│   │   │   ├── middleware/               # Autenticación, rate limiting
-│   │   │   │   ├── auth.py
-│   │   │   │   └── rate_limit.py
-│   │   │   ├── dependencies.py
-│   │   │   └── main.py                   # FastAPI App
-│   │   ├── tests/
-│   │   ├── Dockerfile                    # Puerto 8000
-│   │   ├── pyproject.toml
-│   │   └── README.md                     # ✅ Documentación completa
+│   │   │   ├── main.py            # App FastAPI y DI
+│   │   │   └── ...                # Rutas, auth, etc.
+│   │   ├── Dockerfile
+│   │   └── README.md
 │   │
-│   ├── 🧠 fraud-evaluation-service/      # Servicio 2: Evaluación de Fraude
+│   ├── fraud-evaluation-service/  # Dominio de fraude (estrategias, modelos, casos de uso)
 │   │   ├── src/
-│   │   │   ├── domain/                   # ✅ CLEAN ARCHITECTURE
-│   │   │   │   ├── models/
-│   │   │   │   │   ├── transaction.py
-│   │   │   │   │   ├── evaluation.py
-│   │   │   │   │   └── value_objects.py
-│   │   │   │   └── strategies/           # ✅ STRATEGY PATTERN
-│   │   │   │       ├── base.py
-│   │   │   │       ├── amount_threshold.py
-│   │   │   │       ├── location_check.py
-│   │   │   │       ├── velocity_check.py    # Futuro
-│   │   │   │       └── impossible_travel.py # Futuro
-│   │   │   ├── application/              # Use Cases
-│   │   │   │   ├── interfaces.py         # Puertos (DI)
-│   │   │   │   └── use_cases/
-│   │   │   │       ├── evaluate_transaction.py
-│   │   │   │       └── review_transaction.py
-│   │   │   ├── infrastructure/           # Adaptadores
-│   │   │   │   ├── api/
-│   │   │   │   │   ├── main.py
-│   │   │   │   │   └── routes.py
-│   │   │   │   └── adapters/
-│   │   │   │       └── redis_adapter.py
-│   │   │   └── config.py
-│   │   ├── tests/
-│   │   │   ├── unit/                     # ✅ TDD
-│   │   │   │   ├── domain/
-│   │   │   │   └── application/
-│   │   │   └── integration/
-│   │   ├── Dockerfile                    # Puerto 8001
-│   │   ├── pyproject.toml
-│   │   └── README.md                     # ✅ Documentación completa
-│   │
-│   ├── ⚙️ worker-service/                # Servicio 3: Worker RabbitMQ
-│   │   ├── src/
-│   │   │   ├── consumer/
-│   │   │   │   └── rabbitmq_consumer.py
-│   │   │   ├── processors/
-│   │   │   │   ├── transaction_processor.py
-│   │   │   │   └── review_processor.py
-│   │   │   ├── adapters/
-│   │   │   │   ├── mongodb_adapter.py
-│   │   │   │   ├── redis_adapter.py
-│   │   │   │   └── fraud_service_client.py
+│   │   │   ├── domain/            # Entidades, Value Objects y estrategias
+│   │   │   ├── application/       # Casos de uso
+│   │   │   ├── adapters.py        # MongoDB, Redis, RabbitMQ
 │   │   │   ├── config.py
-│   │   │   └── worker.py                 # Main
-│   │   ├── tests/
-│   │   ├── Dockerfile                    # No expone puerto
-│   │   ├── pyproject.toml
-│   │   └── README.md                     # ✅ Documentación completa
+│   │   │   └── ...
+│   │   └── README.md
 │   │
-│   └── 📦 shared/                        # Código Compartido
-│       ├── domain/                       # Models comunes
-│       │   ├── models.py
-│       │   └── strategies/
-│       ├── config.py                     # Config compartida
-│       ├── adapters.py                   # Adapters comunes
-│       └── interfaces.py                 # Interfaces comunes
-│
-├── 🗄️ infrastructure/                    # INFRAESTRUCTURA EXTERNA
-│   ├── databases/
-│   │   ├── mongodb/
-│   │   │   └── init-scripts/
-│   │   └── README.md
-│   ├── messaging/
-│   │   ├── rabbitmq/
-│   │   │   └── config/
-│   │   └── README.md
-│   └── cache/
-│       ├── redis/
-│       │   └── config/
+│   └── worker-service/            # Worker asíncrono (RabbitMQ → evaluación)
+│       ├── src/
+│       │   └── worker.py
+│       ├── Dockerfile
 │       └── README.md
 │
-├── 🎨 frontend/                          # FRONTEND
-│   ├── streamlit/
-│   │   ├── app.py
-│   │   ├── pages/
-│   │   │   ├── evaluation.py
-│   │   │   ├── audit.py
-│   │   │   ├── review.py
-│   │   │   └── config.py
-│   │   └── components/
-│   ├── Dockerfile                        # Puerto 8501
+├── frontend/
+│   ├── user-app/                  # App de usuario (historial de transacciones)
+│   │   ├── src/
+│   │   ├── package.json
+│   │   └── ...
+│   └── admin-dashboard/           # Dashboard admin (métricas y reglas)
+│       ├── src/
+│       ├── package.json
+│       └── ...
+│
+├── tests/                         # Tests backend (pytest)
+│   ├── unit/
+│   └── integration/
+│
+├── tests-e2e/                     # Tests end-to-end (Playwright)
+│   ├── tests/
+│   ├── pages/
+│   ├── tasks/
 │   └── README.md
 │
-├── 🧪 tests/                             # TESTS DE INTEGRACIÓN
-│   ├── integration/                      # Tests E2E entre servicios
-│   ├── e2e/                              # Tests de usuario final
-│   ├── performance/                      # Load testing
-│   └── README.md
+├── scripts/                       # Scripts de ayuda (PowerShell)
+│   ├── run-tests.ps1
+│   ├── start-all-services.ps1
+│   └── ...
 │
-├── 🛠️ scripts/                           # SCRIPTS DEVOPS
-│   ├── deploy/
-│   │   ├── kubernetes/
-│   │   └── terraform/
-│   ├── validate_architecture.py          # ✅ Validación Clean Architecture
-│   ├── run_tests.sh
-│   └── setup.sh
+├── docs/                          # Documentación
+│   ├── ARQUITECTURE.md
+│   ├── PROJECT_STRUCTURE.md       # Este archivo
+│   ├── MICROSERVICES_ARCHITECTURE.md
+│   ├── TECH_STACK.md
+│   └── ...
 │
-├── 📊 .github/                           # CI/CD
-│   └── workflows/
-│       ├── ci.yml                        # ✅ Pipeline con SonarQube
-│       ├── deploy.yml
-│       └── sonarqube.yml
-│
-├── 📄 DOCUMENTACIÓN
-│   ├── README.md                         # Overview del proyecto
-│   ├── ARQUITECTURE.md                   # Arquitectura original
-│   ├── MICROSERVICES_ARCHITECTURE.md    # ✅ Arquitectura de microservicios
-│   ├── QUICKSTART.md                     # Guía rápida
-│   ├── IMPLEMENTATION_SUMMARY.md         # Resumen de implementación
-│   └── PROJECT_STRUCTURE.md              # ✅ Este archivo
-│
-├── 🐳 DOCKER & COMPOSE
-│   ├── docker-compose.yml               # Original (monolito)
-│   ├── docker-compose.microservices.yml # ✅ Microservicios
-│   ├── docker-compose.dev.yml           # Desarrollo
-│   └── docker-compose.prod.yml          # Producción
-│
-└── ⚙️ CONFIGURACIÓN
-    ├── sonar-project.properties         # ✅ SonarQube
-    ├── pyproject.toml                   # Poetry root
-    ├── .env.example                     # Variables de entorno
-    ├── .gitignore
-    └── .pre-commit-config.yaml
+├── docker-compose.yml             # Orquestación de MongoDB, Redis, RabbitMQ, API, worker y frontends
+├── pyproject.toml                 # Configuración backend (Poetry)
+├── requirements-test.txt
+├── sonar-project.properties
+└── README.md
 ```
 
 ---
 
-## 🔷 Microservicios Implementados
+## 🔷 Servicios Backend
 
-| Servicio | Puerto | Tecnología | Responsabilidad | Escalable |
-|----------|--------|------------|-----------------|-----------|
-| **API Gateway** | 8000 | FastAPI | Routing, Auth, Rate Limiting | ✅ Sí |
-| **Fraud Evaluation** | 8001 | Python + Clean Arch | Lógica de negocio, Strategies | ✅ Sí |
-| **Worker Service** | - | Python + Pika | Procesamiento asíncrono | ✅ Sí |
-| **Frontend** | 8501 | Streamlit | UI Demo | ❌ No |
+- **`services/fraud-evaluation-service`**
+  - Implementa la **lógica de negocio de fraude**:
+    - Modelos de dominio (`Transaction`, `FraudEvaluation`, `Location`, etc.).
+    - Estrategias (`amount_threshold`, `location_check`, `rapid_transaction`, `unusual_time`, etc.).
+    - Casos de uso (`EvaluateTransactionUseCase`, `ReviewTransactionUseCase`).
 
----
+- **`services/api-gateway`**
+  - Expone la API REST en `http://localhost:8000`.
+  - Maneja rutas como:
+    - `POST /transaction`
+    - `GET /audit/all`
+    - `PUT /transaction/review/{id}`
+    - `GET /config/thresholds`
 
-## 🗄️ Infraestructura
+- **`services/worker-service`**
+  - Procesa mensajes de RabbitMQ de forma asíncrona.
+  - Aplica estrategias de fraude y persiste resultados.
 
-| Componente | Puerto | Propósito | HA |
-|------------|--------|-----------|-----|
-| **MongoDB** | 27017 | Persistencia | ✅ Replica Set |
-| **Redis** | 6379 | Caché | ✅ Sentinel |
-| **RabbitMQ** | 5672, 15672 | Mensajería | ✅ Cluster |
-
----
-
-## 🔄 Comunicación entre Servicios
-
-```
-┌─────────────┐
-│   Cliente   │
-└──────┬──────┘
-       │ HTTP
-       ▼
-┌──────────────────┐
-│   API Gateway    │◄─────┐
-│   (Puerto 8000)  │      │
-└────────┬─────────┘      │
-         │                │
-         │ Publish        │ Query
-         ▼                │
-   ┌──────────┐           │
-   │ RabbitMQ │           │
-   └─────┬────┘           │
-         │ Consume        │
-         ▼                │
-┌──────────────────┐      │
-│  Worker Service  │      │
-└────────┬─────────┘      │
-         │ HTTP Call      │
-         ▼                │
-┌──────────────────────┐  │
-│ Fraud Evaluation Svc │  │
-│    (Puerto 8001)     │  │
-└──────────┬───────────┘  │
-           │              │
-           ▼              │
-    ┌──────────┐    ┌─────────┐
-    │ MongoDB  │    │  Redis  │
-    └──────────┘    └─────────┘
-```
+Todos estos servicios se levantan juntos a través de `docker-compose.yml`.
 
 ---
 
-## 🚀 Comandos Rápidos
+## 🎨 Frontend
 
-### Levantar Arquitectura de Microservicios
-```bash
-docker-compose -f docker-compose.microservices.yml up --build
-```
+- **`frontend/user-app`**
+  - Vite + React + TypeScript + Tailwind.
+  - Muestra el historial de transacciones y resultados de evaluación.
+  - En Docker se sirve en `http://localhost:3000`.
+  - En modo dev (`npm run dev`) normalmente corre en `http://localhost:5173`.
 
-### Escalar Servicios Independientemente
-```bash
-# Escalar workers
-docker-compose up --scale worker-service=3
+- **`frontend/admin-dashboard`**
+  - Vite + React + TypeScript + Tailwind + Recharts + TanStack Table.
+  - Muestra métricas de fraude, transacciones y gestión de reglas.
+  - En Docker se sirve en `http://localhost:3001`.
+  - En modo dev (`npm run dev`) corre en `http://localhost:3001`.
 
-# Escalar fraud evaluation
-docker-compose up --scale fraud-evaluation-service=2
-
-# Escalar API gateway
-docker-compose up --scale api-gateway=2
-```
-
-### Ver Estado de Todos los Servicios
-```bash
-docker-compose ps
-```
-
-### Logs por Servicio
-```bash
-docker logs fraud-api-gateway -f
-docker logs fraud-evaluation-service -f
-docker logs fraud-worker-service -f
-```
+Más detalles en `docs/TECH_STACK.md` y en los `README.md` de cada frontend.
 
 ---
 
-## 📊 Ventajas de esta Organización
+## 🧪 Testing
 
-### ✅ Separación Clara
-- Cada microservicio en su propia carpeta
-- Código compartido en `/services/shared`
-- Infraestructura separada en `/infrastructure`
+- **Backend** (`tests/`):
+  - `tests/unit/`: 200+ tests unitarios (estrategias, adaptadores, rutas, modelos).
+  - `tests/integration/`: pruebas de integración sobre API y servicios.
 
-### ✅ Escalabilidad
-- Cada servicio puede escalarse independientemente
-- Deploy independiente sin afectar otros servicios
-- Load balancing automático con Docker Compose
+- **Frontends**:
+  - Cada app (`frontend/user-app`, `frontend/admin-dashboard`) usa **Vitest** + Testing Library.
+  - Scripts estándar: `npm test`, `npm run test:coverage`.
 
-### ✅ Mantenibilidad
-- READMEs específicos por servicio
-- Tests separados por servicio
-- Dockerfiles individuales optimizados
+- **E2E** (`tests-e2e/`):
+  - Playwright cubriendo flujos de usuario y dashboard.
+  - Ver `tests-e2e/README.md` para comandos y estructura.
 
-### ✅ Clean Architecture
-- Domain Layer sin dependencias externas
-- Application Layer con casos de uso
-- Infrastructure Layer con adaptadores
-
-### ✅ SOLID
-- Single Responsibility: 1 servicio = 1 responsabilidad
-- Open/Closed: Nuevas estrategias sin modificar código
-- Dependency Inversion: Interfaces bien definidas
+Cobertura backend actual: ~95% (`coverage.xml` generado por pytest + coverage).
 
 ---
 
-## 🎯 Próximos Pasos
+## 🐳 Docker / Infraestructura
 
-1. **Implementar código en cada microservicio**
-   - Mover código existente a la nueva estructura
-   - Crear Dockerfiles específicos
-   - Configurar dependencias por servicio
+- **`docker-compose.yml`** (único archivo de compose usado actualmente):
+  - `mongodb` (27017)
+  - `redis` (6379)
+  - `rabbitmq` (5672, 15672)
+  - `api` (8000)
+  - `worker`
+  - `frontend-user` (3000)
+  - `frontend-admin` (3001)
 
-2. **Configurar Service Mesh (Opcional)**
-   - Istio o Linkerd para comunicación segura
-   - Observabilidad distribuida
-   - Circuit breakers y retries
-
-3. **Deploy en Kubernetes**
-   - Crear manifests por servicio
-   - ConfigMaps y Secrets
-   - Horizontal Pod Autoscaler
+No existen actualmente archivos como `docker-compose.microservices.yml`, `docker-compose.dev.yml` o `docker-compose.prod.yml`; cualquier referencia a ellos en documentos antiguos debe considerarse **legacy**.
 
 ---
 
-**Arquitectura:** Microservicios + Clean Architecture  
-**Patrón:** Event-Driven + Strategy Pattern  
-**DevOps:** Docker Compose + Kubernetes Ready  
-**Escalabilidad:** Horizontal por servicio
+## ℹ️ Notas
+
+- Algunos documentos antiguos describen una estructura con carpetas como `shared/`, `infrastructure/` o un frontend en Streamlit. Esa estructura fue una propuesta inicial pero **no corresponde al código actual**.
+- Este archivo (`PROJECT_STRUCTURE.md`) es la referencia de verdad (“source of truth”) sobre cómo está organizado el proyecto hoy.

@@ -1,0 +1,6 @@
+﻿{
+  "id": "txn123",
+  "user_id": "user001",
+  "amount": 500,
+  "location": {"latitude": 4.711, "longitude": -74.0721}
+}

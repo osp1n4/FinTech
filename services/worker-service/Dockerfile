@@ -15,8 +15,8 @@ RUN poetry config virtualenvs.create false
 RUN poetry install --only main --no-root --no-interaction --no-ansi
 
 # Copiar código de la aplicación
-COPY services/worker-service/src ./src
-COPY services/shared ./shared
+COPY services/fraud-evaluation-service/src ./src
+COPY services/worker-service/src ./worker
 
 # Comando para ejecutar el worker
-CMD ["python", "-m", "src.worker"]
+CMD ["python", "-m", "worker.worker"]

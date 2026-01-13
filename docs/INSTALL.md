@@ -117,25 +117,33 @@ poetry run streamlit run demo/streamlit_app.py
 
 ## Testing
 
-### Ejecutar todos los tests
+### Ejecutar tests backend (pytest)
 
 ```bash
-poetry run pytest -v
+poetry run pytest tests/unit -v
 ```
 
-### Ejecutar solo tests unitarios
+### Ejecutar tests frontend
 
 ```bash
-poetry run pytest tests/unit/ -v
+# User App
+cd frontend/user-app
+npm test
+
+# Admin Dashboard
+cd ../admin-dashboard
+npm test
 ```
 
-### Ejecutar tests con cobertura
+### Ejecutar tests E2E (Playwright)
 
 ```bash
-poetry run pytest --cov=src --cov-report=html --cov-report=term-missing
+cd tests-e2e
+npm install
+npm test
 ```
 
-Ver reporte de cobertura:
+Ver reporte de cobertura backend:
 ```bash
 # Abrir en navegador
 start htmlcov/index.html  # Windows
@@ -143,36 +151,30 @@ open htmlcov/index.html   # macOS
 xdg-open htmlcov/index.html  # Linux
 ```
 
-### Validar arquitectura (Clean Architecture)
-
-```bash
-python scripts/validate_architecture.py
-```
-
 ## Linters y Formateo
 
 ### Formatear código con Black
 
 ```bash
-poetry run black src/ tests/
+poetry run black services/ tests/
 ```
 
 ### Verificar formato sin cambiar archivos
 
 ```bash
-poetry run black --check src/ tests/
+poetry run black --check services/ tests/
 ```
 
 ### Ejecutar Pylint
 
 ```bash
-poetry run pylint src/
+poetry run pylint services/
 ```
 
 ### Ejecutar MyPy (type checking)
 
 ```bash
-poetry run mypy src/ --ignore-missing-imports
+poetry run mypy services/ --ignore-missing-imports
 ```
 
 ## Acceso a Servicios
@@ -181,14 +183,15 @@ poetry run mypy src/ --ignore-missing-imports
 - **URL:** http://localhost:8000
 - **Docs interactivos (Swagger):** http://localhost:8000/docs
 - **Health check:** http://localhost:8000/health
-
+ 
 ### RabbitMQ Management UI
 - **URL:** http://localhost:15672
 - **Usuario:** `fraud`
 - **Password:** `fraud2026`
 
-### Demo Streamlit
-- **URL:** http://localhost:8501 (si se ejecuta localmente)
+### Frontends (cuando se usan contenedores Docker)
+- **User App:** http://localhost:3000
+- **Admin Dashboard:** http://localhost:3001
 
 ## Endpoints de la API
 
@@ -321,29 +324,21 @@ Verificar que las bases de datos de test estén disponibles:
 docker-compose up -d mongodb redis rabbitmq
 ```
 
-## Estructura del Proyecto
+## Estructura del Proyecto (resumen)
 
-```
+```text
 fraud-detection-engine/
-├── src/
-│   ├── domain/              # Capa Domain (sin dependencias)
-│   │   ├── models.py        # Entidades y Value Objects
-│   │   └── strategies/      # Patrón Strategy
-│   ├── application/         # Capa Application
-│   │   ├── interfaces.py    # Puertos (interfaces)
-│   │   └── use_cases.py     # Casos de uso
-│   └── infrastructure/      # Capa Infrastructure
-│       ├── adapters.py      # MongoDB, Redis, RabbitMQ
-│       ├── config.py        # Configuración
-│       ├── worker.py        # Worker RabbitMQ
-│       └── api/             # FastAPI
+├── services/
+│   ├── api-gateway/
+│   ├── fraud-evaluation-service/
+│   └── worker-service/
+├── frontend/
+│   ├── user-app/
+│   └── admin-dashboard/
 ├── tests/
-│   ├── unit/                # Tests unitarios (TDD)
-│   └── integration/         # Tests de integración
-├── demo/
-│   └── streamlit_app.py     # UI de demostración
+├── tests-e2e/
 ├── scripts/
-│   └── validate_architecture.py  # Validación de arquitectura
+├── docs/
 ├── docker-compose.yml
 ├── pyproject.toml
 └── README.md
