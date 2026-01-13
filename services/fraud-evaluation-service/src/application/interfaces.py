@@ -7,7 +7,7 @@ Cumplimiento SOLID:
 - Dependency Inversion: Application depende de abstracciones, no de implementaciones
 - Single Responsibility: Cada interface tiene un propósito único
 
-Nota del desarrollador (María Gutiérrez):
+Nota (María Gutiérrez):
 La IA sugirió una interface genérica "Repository" para todos los datos.
 Lo refactoricé en interfaces específicas para cumplir con Interface Segregation
 y evitar que los adaptadores implementen métodos innecesarios.

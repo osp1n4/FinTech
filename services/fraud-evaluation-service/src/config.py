@@ -4,7 +4,7 @@ Manejo de variables de entorno y settings
 
 Cumple Single Responsibility: Solo gestiona configuración
 
-Nota del desarrollador (María Gutiérrez):
+Nota  (María Gutiérrez):
 La IA sugirió leer variables de entorno directamente en cada adaptador.
 Lo centralicé en un módulo de configuración usando Pydantic Settings
 para cumplir con "Don't Repeat Yourself" y facilitar testing.
@@ -21,9 +21,7 @@ class Settings(BaseSettings):
     """
 
     # MongoDB
-    # ⚠️ IMPORTANTE: No usar valores por defecto en producción
-    # Configurar mediante variables de entorno o secrets manager
-    mongodb_url: str
+    mongodb_url: str = "mongodb://admin:fraud2026@localhost:27017"
     mongodb_database: str = "fraud_detection"
 
     # Redis
@@ -31,9 +29,7 @@ class Settings(BaseSettings):
     redis_ttl: int = 86400  # 24 horas
 
     # RabbitMQ
-    # ⚠️ IMPORTANTE: No usar valores por defecto en producción
-    # Configurar mediante variables de entorno o secrets manager
-    rabbitmq_url: str
+    rabbitmq_url: str = "amqp://fraud:fraud2026@localhost:5672"
     rabbitmq_transactions_queue: str = "transactions"
     rabbitmq_manual_review_queue: str = "manual_review"
 
