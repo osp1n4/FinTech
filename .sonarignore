@@ -1,0 +1,17 @@
+# Ignorar node_modules completamente en análisis de SonarQube
+**/node_modules/**
+frontend/admin-dashboard/node_modules/**
+frontend/user-app/node_modules/**
+
+# Ignorar librerías específicas que causan falsos positivos
+**/lz-string/**
+**/node_modules/lz-string/**
+
+# Ignorar archivos de test de terceros
+**/SpecRunner.html
+
+# Ignorar otros directorios de terceros
+**/dist/**
+**/build/**
+**/coverage/**
+**/.next/**

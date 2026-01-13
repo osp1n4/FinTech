@@ -6,7 +6,7 @@ import { getUserTransactions } from '../services/api';
 import { useState, useEffect } from 'react';
 
 interface HomePageProps {
-  onNavigate: (page: 'new-transaction' | 'my-transactions') => void;
+  readonly onNavigate: (page: 'new-transaction' | 'my-transactions') => void;
 }
 
 interface Transaction {
@@ -30,7 +30,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const cardNumber = "**** **** **** 4521";
   
   // Balance inicial para cada usuario (guardado en localStorage)
-  const INITIAL_BALANCE = 50000.0;
+  const INITIAL_BALANCE = 50000;
   
   // Calcular balance actual basado en transacciones aprobadas
   const calculateBalance = (allTxs: Transaction[]) => {
@@ -64,9 +64,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
         console.error('Error loading transactions:', error);
         // Si hay error, mostrar transacciones de ejemplo
         const exampleTxs = [
-          { amount: -150.0, description: 'Transferencia a Juan Pérez', timestamp: 'Hoy, 10:30 AM', status: 'APPROVED', transactionType: 'transfer' },
+          { amount: -150, description: 'Transferencia a Juan Pérez', timestamp: 'Hoy, 10:30 AM', status: 'APPROVED', transactionType: 'transfer' },
           { amount: -85.5, description: 'Pago servicio público', timestamp: 'Ayer, 3:15 PM', status: 'APPROVED', transactionType: 'payment' },
-          { amount: 2500.0, description: 'Depósito nómina', timestamp: '2 días', status: 'APPROVED', transactionType: 'deposit' }
+          { amount: 2500, description: 'Depósito nómina', timestamp: '2 días', status: 'APPROVED', transactionType: 'deposit' }
         ];
         setAllTransactions(exampleTxs);
         setTransactions(exampleTxs);

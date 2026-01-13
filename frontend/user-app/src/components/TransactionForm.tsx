@@ -77,7 +77,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const handleChange = (field: keyof TransactionRequest) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = field === 'amount' ? parseFloat(e.target.value) || 0 : e.target.value;
+    const value = field === 'amount' ? Number.parseFloat(e.target.value) || 0 : e.target.value;
     
     // Si cambia el userId, actualizar el contexto
     if (field === 'userId') {
@@ -140,10 +140,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="transaction-type-select" className="block text-sm font-medium text-gray-700 mb-2">
           Tipo de Transacción
         </label>
         <select
+          id="transaction-type-select"
           value={formData.transactionType}
           onChange={(e) => setFormData(prev => ({ ...prev, transactionType: e.target.value as any }))}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-user-primary focus:border-transparent"

@@ -68,7 +68,8 @@ jobs:
           - 27017:27017
         env:
           MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: fraud2026
+          # ⚠️ En producción, usar GitHub Secrets
+          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGODB_TEST_PASSWORD || 'test_password_2026' }}
         options: >-
           --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
           --health-interval 10s
@@ -91,7 +92,8 @@ jobs:
           - 5672:5672
         env:
           RABBITMQ_DEFAULT_USER: fraud
-          RABBITMQ_DEFAULT_PASS: fraud2026
+          # ⚠️ En producción, usar GitHub Secrets
+          RABBITMQ_DEFAULT_PASS: ${{ secrets.RABBITMQ_TEST_PASSWORD || 'test_password_2026' }}
         options: >-
           --health-cmd "rabbitmq-diagnostics ping"
           --health-interval 10s
@@ -131,9 +133,10 @@ jobs:
             --cov-fail-under=${{ env.MIN_COVERAGE }} \
             -v --tb=short
         env:
-          MONGODB_URL: mongodb://admin:fraud2026@localhost:27017
+          # ⚠️ Credenciales deben estar en GitHub Secrets en producción
+          MONGODB_URL: mongodb://admin:${{ secrets.MONGODB_TEST_PASSWORD || 'test_password_2026' }}@localhost:27017
           REDIS_URL: redis://localhost:6379
-          RABBITMQ_URL: amqp://fraud:fraud2026@localhost:5672
+          RABBITMQ_URL: amqp://fraud:${{ secrets.RABBITMQ_TEST_PASSWORD || 'test_password_2026' }}@localhost:5672
 
       - name: 📊 Verificar cobertura
         run: |
@@ -198,16 +201,23 @@ jobs:
       
       - name: ✅ Resumen
         if: always()
+        # ⚠️ Variables sanitizadas para evitar inyección de código
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           echo "================================================"
           echo "📊 RESUMEN DEL PIPELINE"
           echo "================================================"
-          echo "Tipo de evento: ${{ github.event_name }}"
-          echo "Rama: ${{ github.ref_name }}"
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "PR: ${{ github.event.pull_request.number }}"
-            echo "Base: ${{ github.event.pull_request.base.ref }}"
-            echo "Head: ${{ github.event.pull_request.head.ref }}"
+          echo "Tipo de evento: $EVENT_NAME"
+          echo "Rama: $REF_NAME"
+          if [ "$EVENT_NAME" == "pull_request" ]; then
+            echo "PR: $PR_NUMBER"
+            echo "Base: $PR_BASE_REF"
+            echo "Head: $PR_HEAD_REF"
           fi
           echo "================================================"
           echo "✅ Build completado"

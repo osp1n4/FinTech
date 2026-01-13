@@ -11,7 +11,7 @@ const localStorageMock = {
   clear: () => {},
 };
 
-global.localStorage = localStorageMock as any;
+globalThis.localStorage = localStorageMock as any;
 
 describe('App', () => {
   beforeEach(() => {

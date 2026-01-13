@@ -21,7 +21,9 @@ class Settings(BaseSettings):
     """
 
     # MongoDB
-    mongodb_url: str = "mongodb://admin:fraud2026@localhost:27017"
+    # ⚠️ IMPORTANTE: No usar valores por defecto en producción
+    # Configurar mediante variables de entorno o secrets manager
+    mongodb_url: str
     mongodb_database: str = "fraud_detection"
 
     # Redis
@@ -29,7 +31,9 @@ class Settings(BaseSettings):
     redis_ttl: int = 86400  # 24 horas
 
     # RabbitMQ
-    rabbitmq_url: str = "amqp://fraud:fraud2026@localhost:5672"
+    # ⚠️ IMPORTANTE: No usar valores por defecto en producción
+    # Configurar mediante variables de entorno o secrets manager
+    rabbitmq_url: str
     rabbitmq_transactions_queue: str = "transactions"
     rabbitmq_manual_review_queue: str = "manual_review"
 

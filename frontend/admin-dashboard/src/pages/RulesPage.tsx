@@ -132,6 +132,7 @@ export default function RulesPage() {
           className="px-6 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
         >
           <span className="text-xl">+</span>
+          {' '}
           Nueva Regla
         </button>
       </div>
@@ -168,6 +169,7 @@ export default function RulesPage() {
                   className="px-4 py-2 bg-admin-primary rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
                 >
                   <span>✏️</span>
+                  {' '}
                   Editar
                 </button>
                 <button
@@ -175,6 +177,7 @@ export default function RulesPage() {
                   className="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                 >
                   <span>🗑️</span>
+                  {' '}
                   Eliminar
                 </button>
               </div>
@@ -248,15 +251,16 @@ export default function RulesPage() {
             <div className="space-y-4">
               {editingRule.type === 'amount_threshold' && (
                 <div>
-                  <label className="block text-sm mb-2">Threshold ($)</label>
+                  <label htmlFor="threshold-input" className="block text-sm mb-2">Threshold ($)</label>
                   <input
+                    id="threshold-input"
                     type="number"
                     className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                     value={editingRule.parameters.threshold}
                     onChange={(e) =>
                       setEditingRule({
                         ...editingRule,
-                        parameters: { ...editingRule.parameters, threshold: parseFloat(e.target.value) },
+                        parameters: { ...editingRule.parameters, threshold: Number.parseFloat(e.target.value) },
                       })
                     }
                   />
@@ -264,15 +268,16 @@ export default function RulesPage() {
               )}
               {editingRule.type === 'location_check' && (
                 <div>
-                  <label className="block text-sm mb-2">Radio (km)</label>
+                  <label htmlFor="radius-km-input" className="block text-sm mb-2">Radio de ubicación (km)</label>
                   <input
+                    id="radius-km-input"
                     type="number"
                     className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                     value={editingRule.parameters.radius_km}
                     onChange={(e) =>
                       setEditingRule({
                         ...editingRule,
-                        parameters: { ...editingRule.parameters, radius_km: parseFloat(e.target.value) },
+                        parameters: { ...editingRule.parameters, radius_km: Number.parseFloat(e.target.value) },
                       })
                     }
                   />
@@ -280,15 +285,16 @@ export default function RulesPage() {
               )}
               {editingRule.type === 'device_validation' && (
                 <div>
-                  <label className="block text-sm mb-2">Memoria de dispositivos (días)</label>
+                  <label htmlFor="device-memory-input" className="block text-sm mb-2">Memoria de dispositivos (días)</label>
                   <input
+                    id="device-memory-input"
                     type="number"
                     className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                     value={editingRule.parameters.device_memory_days || 90}
                     onChange={(e) =>
                       setEditingRule({
                         ...editingRule,
-                        parameters: { ...editingRule.parameters, device_memory_days: parseInt(e.target.value) },
+                        parameters: { ...editingRule.parameters, device_memory_days: Number.parseInt(e.target.value, 10) },
                       })
                     }
                   />
@@ -298,29 +304,31 @@ export default function RulesPage() {
               {editingRule.type === 'rapid_transaction' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm mb-2">Máximo de transacciones</label>
+                    <label htmlFor="max-transactions-input" className="block text-sm mb-2">Máximo de transacciones</label>
                     <input
+                      id="max-transactions-input"
                       type="number"
                       className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                       value={editingRule.parameters.max_transactions || 3}
                       onChange={(e) =>
                         setEditingRule({
                           ...editingRule,
-                          parameters: { ...editingRule.parameters, max_transactions: parseInt(e.target.value) },
+                          parameters: { ...editingRule.parameters, max_transactions: Number.parseInt(e.target.value, 10) },
                         })
                       }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm mb-2">Ventana de tiempo (minutos)</label>
+                    <label htmlFor="time-window-input" className="block text-sm mb-2">Ventana de tiempo (minutos)</label>
                     <input
+                      id="time-window-input"
                       type="number"
                       className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                       value={editingRule.parameters.time_window_minutes || 5}
                       onChange={(e) =>
                         setEditingRule({
                           ...editingRule,
-                          parameters: { ...editingRule.parameters, time_window_minutes: parseInt(e.target.value) },
+                          parameters: { ...editingRule.parameters, time_window_minutes: Number.parseInt(e.target.value, 10) },
                         })
                       }
                     />
@@ -330,8 +338,9 @@ export default function RulesPage() {
               )}
               {editingRule.type === 'unusual_time' && (
                 <div>
-                  <label className="block text-sm mb-2">Umbral de desviación (0.0 - 1.0)</label>
+                  <label htmlFor="deviation-threshold-input" className="block text-sm mb-2">Umbral de desviación (0.0 - 1.0)</label>
                   <input
+                    id="deviation-threshold-input"
                     type="number"
                     step="0.1"
                     min="0"
@@ -341,7 +350,7 @@ export default function RulesPage() {
                     onChange={(e) =>
                       setEditingRule({
                         ...editingRule,
-                        parameters: { ...editingRule.parameters, deviation_threshold: parseFloat(e.target.value) },
+                        parameters: { ...editingRule.parameters, deviation_threshold: Number.parseFloat(e.target.value) },
                       })
                     }
                   />
@@ -374,8 +383,9 @@ export default function RulesPage() {
             <h2 className="text-xl font-bold mb-6">Crear Nueva Regla</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm mb-2">Nombre de la Regla *</label>
+                <label htmlFor="new-rule-name" className="block text-sm mb-2">Nombre de la Regla *</label>
                 <input
+                  id="new-rule-name"
                   type="text"
                   className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                   placeholder="Ej: Regla de horario nocturno"
@@ -384,8 +394,9 @@ export default function RulesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-2">Tipo de Regla *</label>
+                <label htmlFor="new-rule-type" className="block text-sm mb-2">Tipo de Regla *</label>
                 <select
+                  id="new-rule-type"
                   className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                   value={newRule.type}
                   onChange={(e) => setNewRule({ ...newRule, type: e.target.value })}
@@ -399,8 +410,9 @@ export default function RulesPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm mb-2">Parámetros (JSON)</label>
+                <label htmlFor="new-rule-parameters" className="block text-sm mb-2">Parámetros (JSON)</label>
                 <textarea
+                  id="new-rule-parameters"
                   className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none font-mono text-sm"
                   rows={4}
                   placeholder='{\n  "threshold": 1000,\n  "action": "flag"\n}'
@@ -427,12 +439,13 @@ export default function RulesPage() {
                 })()}
               </div>
               <div>
-                <label className="block text-sm mb-2">Prioridad (orden)</label>
+                <label htmlFor="new-rule-order" className="block text-sm mb-2">Prioridad (orden)</label>
                 <input
+                  id="new-rule-order"
                   type="number"
                   className="w-full px-4 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
                   value={newRule.order}
-                  onChange={(e) => setNewRule({ ...newRule, order: parseInt(e.target.value) })}
+                  onChange={(e) => setNewRule({ ...newRule, order: Number.parseInt(e.target.value, 10) })}
                 />
               </div>
               <div className="flex items-center">

@@ -50,16 +50,38 @@ Write-Host "Comando: $pytestCommand" -ForegroundColor Gray
 Write-Host ""
 
 # Ejecutar tests en un contenedor temporal
-# Nota: Las credenciales son solo para desarrollo/testing local
-# En producción usar variables de entorno o secretos seguros
+# ⚠️ Las credenciales DEBEN configurarse mediante variables de entorno
+# Validar que las variables de entorno estén configuradas
+if (-not $env:MONGODB_URL) {
+    Write-Host "ERROR: Variable de entorno MONGODB_URL no está configurada." -ForegroundColor Red
+    Write-Host "Por favor, carga el archivo .env o configura las variables manualmente." -ForegroundColor Yellow
+    exit 1
+}
+
+if (-not $env:REDIS_URL) {
+    Write-Host "ERROR: Variable de entorno REDIS_URL no está configurada." -ForegroundColor Red
+    Write-Host "Por favor, carga el archivo .env o configura las variables manualmente." -ForegroundColor Yellow
+    exit 1
+}
+
+if (-not $env:RABBITMQ_URL) {
+    Write-Host "ERROR: Variable de entorno RABBITMQ_URL no está configurada." -ForegroundColor Red
+    Write-Host "Por favor, carga el archivo .env o configura las variables manualmente." -ForegroundColor Yellow
+    exit 1
+}
+
+$mongodbUrl = $env:MONGODB_URL
+$redisUrl = $env:REDIS_URL
+$rabbitmqUrl = $env:RABBITMQ_URL
+
 docker run --rm `
     --network fraud-detection-engine_fraud-network `
     -v "${PWD}:/app" `
     -w /app `
     -e PYTHONPATH=/app `
-    -e MONGODB_URL=mongodb://admin:fraud2026@fraud-mongodb:27017 `  # sonar.issue.ignore.multicriteria: passwords
-    -e REDIS_URL=redis://fraud-redis:6379 `
-    -e RABBITMQ_URL=amqp://fraud:fraud2026@fraud-rabbitmq:5672 `
+    -e MONGODB_URL=$mongodbUrl `
+    -e REDIS_URL=$redisUrl `
+    -e RABBITMQ_URL=$rabbitmqUrl `
     python:3.11-slim `
     sh -c "pip install --quiet -r requirements-test.txt && $pytestCommand"
 

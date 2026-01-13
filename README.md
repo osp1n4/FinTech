@@ -198,3 +198,15 @@ Ver configuración en [.github/workflows/tests.yml](.github/workflows/tests.yml)
 ## 📝 Licencia
 
 MIT License
+
+---
+
+## 📚 Documentación Adicional
+
+- [📋 Historias de Usuario](docs/HISTORIAS_USUARIO.md)
+- [🧪 Plan de Pruebas](docs/TEST_PLAN.md)
+- [🏗️ Arquitectura de Microservicios](docs/MICROSERVICES_ARCHITECTURE.md)
+- [📦 Estructura del Proyecto](docs/PROJECT_STRUCTURE.md)
+- [🌿 Flujo de Trabajo Git](docs/GIT_WORKFLOW.md) - **Guía completa de ramas y colaboración**
+- [💼 Contexto de Negocio](docs/CONTEXTO_NEGOCIO.md)
+- [🎯 Guía de Reglas de Ubicación](docs/LOCATION_RULES_GUIDE.md)

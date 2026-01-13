@@ -66,10 +66,10 @@ export default function TransactionsPage() {
     }
 
     if (minAmount) {
-      filtered = filtered.filter(tx => tx.amount >= parseFloat(minAmount));
+      filtered = filtered.filter(tx => tx.amount >= Number.parseFloat(minAmount));
     }
     if (maxAmount) {
-      filtered = filtered.filter(tx => tx.amount <= parseFloat(maxAmount));
+      filtered = filtered.filter(tx => tx.amount <= Number.parseFloat(maxAmount));
     }
 
     setTransactions(filtered);
@@ -150,6 +150,7 @@ export default function TransactionsPage() {
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">
                     <div className="flex items-center gap-2">
                       ID
+                      {' '}
                       <button
                         onClick={() => setShowIdFilter(!showIdFilter)}
                         className="text-gray-500 hover:text-admin-primary transition-colors"
@@ -172,6 +173,7 @@ export default function TransactionsPage() {
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">
                     <div className="flex items-center gap-2">
                       Monto
+                      {' '}
                       <button
                         onClick={() => setShowAmountFilter(!showAmountFilter)}
                         className="text-gray-500 hover:text-admin-primary transition-colors"
@@ -202,6 +204,7 @@ export default function TransactionsPage() {
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">
                     <div className="flex items-center gap-2">
                       Usuario
+                      {' '}
                       <button
                         onClick={() => setShowUserFilter(!showUserFilter)}
                         className="text-gray-500 hover:text-admin-primary transition-colors"
@@ -223,6 +226,7 @@ export default function TransactionsPage() {
                   <th className="text-left py-4 px-6 text-gray-400 font-medium">
                     <div className="flex items-center gap-2">
                       Ubicación
+                      {' '}
                       <button
                         onClick={() => setShowLocationFilter(!showLocationFilter)}
                         className="text-gray-500 hover:text-admin-primary transition-colors"
