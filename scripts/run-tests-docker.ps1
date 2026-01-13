@@ -50,11 +50,29 @@ Write-Host "Comando: $pytestCommand" -ForegroundColor Gray
 Write-Host ""
 
 # Ejecutar tests en un contenedor temporal
-# ⚠️ Las credenciales deben configurarse mediante archivo .env
-# Leer desde variables de entorno o usar valores del .env
-$mongodbUrl = if ($env:MONGODB_URL) { $env:MONGODB_URL } else { "mongodb://admin:CHANGE_PASSWORD@fraud-mongodb:27017" }
-$redisUrl = if ($env:REDIS_URL) { $env:REDIS_URL } else { "redis://fraud-redis:6379" }
-$rabbitmqUrl = if ($env:RABBITMQ_URL) { $env:RABBITMQ_URL } else { "amqp://fraud:CHANGE_PASSWORD@fraud-rabbitmq:5672" }
+# ⚠️ Las credenciales DEBEN configurarse mediante variables de entorno
+# Validar que las variables de entorno estén configuradas
+if (-not $env:MONGODB_URL) {
+    Write-Host "ERROR: Variable de entorno MONGODB_URL no está configurada." -ForegroundColor Red
+    Write-Host "Por favor, carga el archivo .env o configura las variables manualmente." -ForegroundColor Yellow
+    exit 1
+}
+
+if (-not $env:REDIS_URL) {
+    Write-Host "ERROR: Variable de entorno REDIS_URL no está configurada." -ForegroundColor Red
+    Write-Host "Por favor, carga el archivo .env o configura las variables manualmente." -ForegroundColor Yellow
+    exit 1
+}
+
+if (-not $env:RABBITMQ_URL) {
+    Write-Host "ERROR: Variable de entorno RABBITMQ_URL no está configurada." -ForegroundColor Red
+    Write-Host "Por favor, carga el archivo .env o configura las variables manualmente." -ForegroundColor Yellow
+    exit 1
+}
+
+$mongodbUrl = $env:MONGODB_URL
+$redisUrl = $env:REDIS_URL
+$rabbitmqUrl = $env:RABBITMQ_URL
 
 docker run --rm `
     --network fraud-detection-engine_fraud-network `
