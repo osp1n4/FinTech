@@ -4,7 +4,7 @@ Endpoints para evaluación, auditoría, revisión y configuración
 
 Cumple Single Responsibility: Cada endpoint tiene una responsabilidad única
 
-Nota del desarrollador (María Gutiérrez):
+Nota (María Gutiérrez):
 La IA sugirió poner toda la lógica en las rutas. La moví a los casos de uso
 para cumplir con Separation of Concerns - las rutas solo manejan HTTP.
 """
@@ -13,6 +13,20 @@ from typing import List, Optional, Callable, Any, Dict
 from pydantic import BaseModel, Field
 from decimal import Decimal
 from datetime import datetime, timezone
+
+
+def _iso_utc(dt: Optional[datetime]) -> Optional[str]:
+    """
+    Return an ISO 8601 string in UTC ('Z') for a datetime.
+    If dt is None, return None.
+    If dt is naive, assume it's in local time and convert to UTC.
+    """
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        # treat as local, convert to UTC
+        return dt.astimezone(timezone.utc).isoformat().replace('+00:00', 'Z')
+    return dt.astimezone(timezone.utc).isoformat().replace('+00:00', 'Z')
 
 # Constantes
 RULE_NOT_FOUND_MESSAGE = "Rule not found"
@@ -414,10 +428,10 @@ async def get_all_evaluations():
             "transaction_id": e.transaction_id,
             "risk_level": e.risk_level.name,
             "reasons": e.reasons,
-            "timestamp": e.timestamp.isoformat(),
+            "timestamp": _iso_utc(e.timestamp),
             "status": e.status,
             "reviewed_by": e.reviewed_by,
-            "reviewed_at": e.reviewed_at.isoformat() if e.reviewed_at else None,
+            "reviewed_at": _iso_utc(e.reviewed_at) if e.reviewed_at else None,
         }
         for e in evaluations
     ]
@@ -437,10 +451,10 @@ async def get_evaluation_by_id(transaction_id: str):
         "transaction_id": evaluation.transaction_id,
         "risk_level": evaluation.risk_level.name,
         "reasons": evaluation.reasons,
-        "timestamp": evaluation.timestamp.isoformat(),
+            "timestamp": _iso_utc(evaluation.timestamp),
         "status": evaluation.status,
         "reviewed_by": evaluation.reviewed_by,
-        "reviewed_at": evaluation.reviewed_at.isoformat()
+        "reviewed_at": _iso_utc(evaluation.reviewed_at)
         if evaluation.reviewed_at
         else None,
     }
@@ -467,7 +481,7 @@ async def get_user_transactions(user_id: str):
             "risk_level": e.risk_level.name,
             "reasons": e.reasons,
             "status": e.status,
-            "evaluated_at": e.evaluated_at.isoformat() if hasattr(e, 'evaluated_at') and e.evaluated_at else e.timestamp.isoformat(),
+            "evaluated_at": _iso_utc(e.evaluated_at) if hasattr(e, 'evaluated_at') and e.evaluated_at else _iso_utc(e.timestamp),
             "reviewed_by": e.reviewed_by,
             "reviewed_at": e.reviewed_at.isoformat() if e.reviewed_at else None,
         }
@@ -863,7 +877,7 @@ async def update_rule(
 @api_v1_router.get("/admin/transactions/log")
 async def get_transactions_log(
     status: Optional[str] = Query(None, description="Filter by status: APPROVED, SUSPICIOUS, REJECTED"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of transactions to return"),
+    limit: Optional[int] = Query(None, ge=1, description="Maximum number of transactions to return (omit for all)"),
     user_id: Optional[str] = Query(None, description="Filter by user ID")
 ):
     """
@@ -893,8 +907,9 @@ async def get_transactions_log(
             backend_status = status_map.get(status.upper(), status.upper())
             evaluations = [e for e in evaluations if e.status == backend_status]
         
-        # Limitar resultados
-        evaluations = evaluations[:limit]
+        # Limitar resultados si se especificó un límite
+        if limit is not None:
+            evaluations = evaluations[:limit]
         
         # Helper para mapear status
         def map_status_to_frontend(status: str) -> str:
@@ -914,14 +929,14 @@ async def get_transactions_log(
                 "id": e.transaction_id,
                 "amount": float(e.amount) if e.amount else 0.0,
                 "userId": e.user_id,
-                "date": e.timestamp.isoformat(),
+                "date": _iso_utc(e.timestamp),
                 "status": frontend_status,
                 "violations": e.reasons,
                 "riskLevel": e.risk_level.name,
                 "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else "N/A",
                 "userAuthenticated": e.user_authenticated,
                 "reviewedBy": e.reviewed_by,
-                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None
+                "reviewedAt": _iso_utc(e.reviewed_at) if e.reviewed_at else None
             })
         
         return result
@@ -1196,14 +1211,14 @@ async def get_user_transactions(
                 "userId": e.user_id,
                 "amount": float(e.amount) if e.amount else None,
                 "location": f"{e.location.latitude}, {e.location.longitude}" if e.location else None,
-                "timestamp": e.timestamp.isoformat(),
+                "timestamp": _iso_utc(e.timestamp),
                 "status": e.status,
                 "riskScore": e.risk_level.value,
                 "violations": e.reasons,
                 "needsAuthentication": e.status == "PENDING_REVIEW" and e.user_authenticated is None,
                 "userAuthenticated": e.user_authenticated,
                 "reviewedBy": e.reviewed_by,
-                "reviewedAt": e.reviewed_at.isoformat() if e.reviewed_at else None,
+                "reviewedAt": _iso_utc(e.reviewed_at) if e.reviewed_at else None,
                 "transactionType": e.transaction_type,
                 "description": e.description
             }

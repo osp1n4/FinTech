@@ -9,11 +9,35 @@ const api = axios.create({
   },
 });
 
+// Interceptor para agregar el token JWT a todas las peticiones
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Interceptor para manejo de errores
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error);
+    
+    // Si el token expiró o es inválido, limpiar la sesión
+    if (error.response?.status === 401) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userFullName');
+      globalThis.location.reload();
+    }
+    
     return Promise.reject(error);
   }
 );

@@ -4,33 +4,44 @@ Motor de detección de fraude implementado con **Clean Architecture**, **TDD/BDD
 
 ## 🧪 Cumplimiento TDD/BDD
 
-[![Tests](https://img.shields.io/badge/tests-162%20passed-brightgreen)](docs/TEST_PLAN_COMPLETO.md)
-[![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen)](htmlcov/index.html)
-[![TDD](https://img.shields.io/badge/TDD-100%25-blue)](docs/CUMPLIMIENTO_TDD_BDD.md)
-[![BDD](https://img.shields.io/badge/BDD-9%20HU%20Gherkin-blue)](docs/HISTORIAS_USUARIO_DETALLADAS.md)
+[![Tests](https://img.shields.io/badge/tests-200%2B%20passed-brightgreen)](docs/TEST_PLAN.md)
+[![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)](htmlcov/index.html)
+[![TDD](https://img.shields.io/badge/TDD-aplicado-blue)](docs/FLUJO_TDD_BDD.md)
+[![BDD](https://img.shields.io/badge/BDD-historias%20Gherkin-blue)](docs/USER_HISTORY.md)
 
-### ✅ Verificación Completa
+### ✅ Verificación Completa (estado actual)
 
-- ✅ **162 tests pasando** (0 skipped, 0 failed)
-- ✅ **89% cobertura de código** (objetivo: >80%)
-- ✅ **14 historias de usuario** con criterios Gherkin (Backend + Frontend)
+- ✅ **244 tests unitarios backend** pasando (pytest, `tests/unit/`)
+- ✅ **Tests de frontend (user-app y admin-dashboard)** pasando (Vitest)
+- ✅ **Cobertura backend ~95%** según `coverage.xml` (umbral mínimo configurado: 70%)
+- ✅ **Historias de usuario** cubiertas con tests unitarios, integración y E2E
 - ✅ **Tests escritos antes del código** (TDD)
 - ✅ **Ciclo Red-Green-Refactor** documentado
 - ✅ **Especificaciones ejecutables** (BDD)
 
-📖 **Ver documentación completa:**
-- [Cumplimiento TDD/BDD](docs/CUMPLIMIENTO_TDD_BDD.md)
-- [Historias de Usuario Detalladas](docs/HISTORIAS_USUARIO_DETALLADAS.md)
-- [Plan de Pruebas Completo](docs/TEST_PLAN_COMPLETO.md)
-- [Casos de Prueba Gherkin](docs/TEST_CASES_GHERKIN.md)
+📖 **Ver documentación completa (actualizada):**
+- `docs/USER_HISTORY.md`: Historias de usuario y flujos de negocio
+- `docs/TEST_PLAN.md`: Plan de pruebas y tipos de tests
+- `docs/TEST_CASES.md`: Casos de prueba
+- `tests-e2e/README.md`: Tests E2E con Playwright
 
 ## 🏗️ Arquitectura
 
-### Capas
+### Visión general
 
-- **Domain**: Entidades, Value Objects y Estrategias de fraude (sin dependencias externas)
-- **Application**: Casos de uso y puertos (interfaces)
-- **Infrastructure**: Adaptadores (FastAPI, MongoDB, Redis, RabbitMQ)
+- **Backend**:
+  - `services/fraud-evaluation-service`: dominio de fraude (estrategias, modelos, casos de uso)
+  - `services/api-gateway`: API FastAPI expuesta en `http://localhost:8000`
+  - `services/worker-service`: worker asíncrono con RabbitMQ
+- **Frontends**:
+  - `frontend/user-app`: app de usuario (historial de transacciones)
+  - `frontend/admin-dashboard`: dashboard admin (métricas y reglas)
+- **Infraestructura**:
+  - MongoDB, Redis y RabbitMQ orquestados con `docker-compose.yml`
+
+Para una descripción más detallada ver:
+- `docs/PROJECT_STRUCTURE.md`
+- `docs/MICROSERVICES_ARCHITECTURE.md`
 
 ### Principios SOLID
 
@@ -84,11 +95,11 @@ docker-compose ps
 # 4. Ver logs
 docker-compose logs -f
 
-# 5. Acceder a la API
-# http://localhost:8000/docs (Swagger UI)
+# 5. Acceder a la API (Swagger UI)
+# http://localhost:8000/docs
 
-# 6. Acceder a los frontends
-# Frontend Usuario: http://localhost:5173
+# 6. Acceder a los frontends (servidos por Nginx en Docker)
+# Frontend Usuario: http://localhost:3000
 # Frontend Admin: http://localhost:3001
 
 # Iniciar frontend de usuario
@@ -102,30 +113,30 @@ npm install
 npm run dev
 ```
 
-### Opción 2: Desarrollo Local
+### Opción 2: Desarrollo Local (sin Docker para backend)
 
 ```bash
 # 1. Instalar Poetry
 curl -sSL https://install.python-poetry.org | python3 -
 
-# 2. Instalar dependencias
+# 2. Instalar dependencias backend
 poetry install
 
-# 3. Copiar variables de entorno
-copy .env.example .env
+# 3. Copiar variables de entorno (si aplica)
+cp .env.example .env  # o copy en Windows
 
-# 4. Levantar solo las bases de datos
+# 4. Levantar solo las bases de datos con Docker
 docker-compose up -d mongodb redis rabbitmq
 
-# 5. Ejecutar API
-poetry run uvicorn src.infrastructure.api.main:app --reload
+# 5. Ejecutar API (desde la raíz del repo)
+poetry run uvicorn api_gateway.main:app --reload --host 0.0.0.0 --port 8000
 
 # 6. Ejecutar Worker (en otra terminal)
-poetry run python -m src.infrastructure.worker
+poetry run python -m services.worker-service.src.worker
 
-# 7. Ejecutar frontends
-# Ver instrucciones en frontend/user-app/README.md
-# Ver instrucciones en frontend/admin-dashboard/README.md
+# 7. Ejecutar frontends en modo dev
+cd frontend/user-app && npm install && npm run dev       # http://localhost:5173
+cd frontend/admin-dashboard && npm install && npm run dev  # http://localhost:3001
 ```
 
 ## 🧪 Testing
@@ -161,7 +172,7 @@ La guía incluye:
 
 ### Cobertura de Tests
 
-- **Backend**: 110+ tests unitarios (estrategias, adaptadores, workers, routes)
+- **Backend**: 244 tests unitarios (estrategias, adaptadores, workers, routes)
 - **Frontend**: Tests de componentes, utilidades y servicios API
 - **E2E**: Tests end-to-end con Playwright
 
@@ -187,3 +198,15 @@ Ver configuración en [.github/workflows/tests.yml](.github/workflows/tests.yml)
 ## 📝 Licencia
 
 MIT License
+
+---
+
+## 📚 Documentación Adicional
+
+- [📋 Historias de Usuario](docs/HISTORIAS_USUARIO.md)
+- [🧪 Plan de Pruebas](docs/TEST_PLAN.md)
+- [🏗️ Arquitectura de Microservicios](docs/MICROSERVICES_ARCHITECTURE.md)
+- [📦 Estructura del Proyecto](docs/PROJECT_STRUCTURE.md)
+- [🌿 Flujo de Trabajo Git](docs/GIT_WORKFLOW.md) - **Guía completa de ramas y colaboración**
+- [💼 Contexto de Negocio](docs/CONTEXTO_NEGOCIO.md)
+- [🎯 Guía de Reglas de Ubicación](docs/LOCATION_RULES_GUIDE.md)

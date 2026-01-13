@@ -4,6 +4,7 @@ import { Card } from '../components/ui/Card';
 import { getUserTransactions, authenticateTransaction } from '../services/api';
 import { useUser } from '../context/UserContext';
 import { translateViolation } from '../utils/translations';
+import { useToast } from '../components/ToastContainer';
 
 interface Transaction {
   id: string;
@@ -46,16 +47,21 @@ export function TransactionsPage() {
     loadTransactions();
   }, [userId]); // Recargar cuando cambie el userId
 
+  const { add } = useToast();
+
   const handleAuthenticate = async (transactionId: string, confirmed: boolean) => {
     try {
       setAuthenticating(transactionId);
       await authenticateTransaction(transactionId, confirmed);
       await loadTransactions(); // Recargar lista
-      alert(confirmed 
-        ? '✓ Confirmaste que fuiste tú. Un analista revisará pronto.' 
-        : '✗ Gracias por alertarnos. Bloquearemos esta transacción.');
+      add(confirmed 
+        ? 'Confirmaste que fuiste tú. Un analista revisará pronto.' 
+        : 'Gracias por alertarnos. Bloquearemos esta transacción.',
+        confirmed ? 'success' : 'warning',
+        confirmed ? 'Autenticación confirmada' : 'Transacción reportada'
+      );
     } catch (err) {
-      alert('Error al autenticar transacción');
+      add('Error al autenticar transacción', 'error', 'Error');
       console.error(err);
     } finally {
       setAuthenticating(null);

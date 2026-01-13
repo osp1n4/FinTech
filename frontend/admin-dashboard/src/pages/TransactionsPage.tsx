@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getTransactionsLog, reviewTransaction } from '@/services/api';
 import { translateViolation } from '@/utils/translations';
+import { useToast } from '@/components/ToastContainer';
 import type { Transaction } from '@/types';
 
 export default function TransactionsPage() {
@@ -8,6 +9,7 @@ export default function TransactionsPage() {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [pageSize, setPageSize] = useState<string>('100');
   
   // Filtros locales
   const [searchId, setSearchId] = useState('');
@@ -24,12 +26,14 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     loadTransactions();
-  }, [filter]);
+  }, [filter, pageSize]);
 
   const loadTransactions = async () => {
     setLoading(true);
     try {
-      const data = await getTransactionsLog(filter || undefined, 500);
+      // Convert pageSize into numeric limit or undefined for 'Todos'
+      const limit = pageSize === 'Todos' || pageSize === 'all' ? undefined : parseInt(pageSize, 10);
+      const data = await getTransactionsLog(filter || undefined, limit as any);
       setAllTransactions(data);
       applyFilters(data);
     } catch (error) {
@@ -75,13 +79,15 @@ export default function TransactionsPage() {
     applyFilters(allTransactions);
   }, [searchId, searchUser, searchLocation, minAmount, maxAmount, allTransactions]);
 
+  const { add } = useToast();
+
   const handleReview = async (transactionId: string, decision: 'APPROVED' | 'REJECTED') => {
     try {
       await reviewTransaction(transactionId, decision);
       await loadTransactions();
-      alert(`Transacción ${decision === 'APPROVED' ? 'aprobada' : 'rechazada'} exitosamente`);
+      add(`Transacción ${decision === 'APPROVED' ? 'aprobada' : 'rechazada'} exitosamente`, 'success', decision === 'APPROVED' ? 'Aprobación completada' : 'Rechazo completado');
     } catch (error: any) {
-      alert(`Error al revisar la transacción: ${error.response?.data?.detail || error.message}`);
+      add(`Error al revisar la transacción: ${error.response?.data?.detail || error.message}`, 'error', 'Error al revisar');
     }
   };
 
@@ -90,7 +96,7 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Log de Transacciones</h1>
+        <h1 className="text-2xl font-bold">Transacciones</h1>
         <div className="bg-admin-surface px-4 py-2 rounded-lg">
           <span className="text-yellow-400">⚠</span>
           <span className="ml-2">En Revisión: {suspiciousCount}</span>
@@ -99,7 +105,7 @@ export default function TransactionsPage() {
 
       {/* Filtro de estado */}
       <div className="bg-admin-surface rounded-xl p-4">
-        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-gray-400">Estado:</span>
           <select
             value={filter}
@@ -111,6 +117,21 @@ export default function TransactionsPage() {
             <option value="SUSPICIOUS">Sospechosas</option>
             <option value="REJECTED">Rechazadas</option>
           </select>
+          <div className="ml-4">
+            <label className="text-sm text-gray-400 mr-2">Mostrar:</label>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(e.target.value)}
+              className="px-3 py-2 bg-admin-bg rounded-lg border border-gray-600 focus:border-admin-primary focus:outline-none"
+            >
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+              <option value="Todos">Todos</option>
+            </select>
+          </div>
           <span className="text-sm text-gray-400 ml-auto">
             Mostrando {transactions.length} de {allTransactions.length} transacciones
           </span>

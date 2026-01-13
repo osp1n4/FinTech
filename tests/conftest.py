@@ -8,6 +8,8 @@ Incluye datos de ejemplo y configuración de la base de datos de prueba.
 import pytest
 from datetime import datetime
 from typing import Dict, Any
+import sys
+from pathlib import Path
 
 
 @pytest.fixture
@@ -65,3 +67,20 @@ def mock_redis():
     mock_redis.set.return_value = True
     
     return mock_redis
+
+
+def pytest_sessionstart(session):
+    """Ensure service src folders are on sys.path so imports like `src.*` work."""
+    repo_root = Path(__file__).resolve().parents[1]
+    # Make the repository root importable so tests can `import services...`
+    repo_root_str = str(repo_root)
+    if repo_root_str not in sys.path:
+        sys.path.insert(0, repo_root_str)
+    services_dir = repo_root / 'services'
+    if services_dir.exists():
+        for child in services_dir.iterdir():
+            src_folder = child / 'src'
+            if src_folder.exists():
+                p = str(src_folder)
+                if p not in sys.path:
+                    sys.path.insert(0, p)

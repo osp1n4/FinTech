@@ -5,13 +5,23 @@ import { TransactionForm } from './components/TransactionForm';
 import { ResultDisplay } from './components/ResultDisplay';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { HomePage } from './pages/HomePage';
+<<<<<<< HEAD
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
+=======
 import { NavBar } from './components/NavBar';
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
 import { validateTransaction, getUserTransactions } from './services/api';
 import { useUser } from './context/UserContext';
 import type { TransactionRequest, TransactionResponse, TransactionStatus } from './types/transaction';
 
 type Page = 'home' | 'new-transaction' | 'my-transactions';
+<<<<<<< HEAD
+type AuthView = 'login' | 'register' | 'verify-email';
+=======
 type NotificationType = 'success' | 'warning' | 'info';
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
 
 interface Notification {
   id: string;
@@ -20,6 +30,10 @@ interface Notification {
   time: string;
   type: NotificationType;
   read: boolean;
+  meta?: {
+    amount?: number;
+    txId?: string;
+  };
 }
 
 // Helper functions para reducir complejidad
@@ -30,7 +44,9 @@ const getTransactionTypeLabel = (type: string | undefined): string => {
 };
 
 function App() {
-  const { userId } = useUser();
+  const { userId, isAuthenticated, login, logout } = useUser();
+  const [authView, setAuthView] = useState<AuthView>('login');
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [status, setStatus] = useState<TransactionStatus>('idle');
   const [result, setResult] = useState<TransactionResponse | null>(null);
@@ -38,9 +54,27 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [homeRefreshKey, setHomeRefreshKey] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [lastCheckedTransactions, setLastCheckedTransactions] = useState<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    try {
+      const raw = localStorage.getItem('notifications');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [lastCheckedTransactions, setLastCheckedTransactions] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('lastCheckedTransactions');
+      const arr = raw ? JSON.parse(raw) : [];
+      return new Set(arr);
+    } catch (e) {
+      return new Set();
+    }
+  });
 
+<<<<<<< HEAD
+  // ✅ TODOS LOS HOOKS SIEMPRE AL INICIO - Polling para verificar actualizaciones de transacciones del admin
+=======
   const addNotification = (title: string, message: string, type: NotificationType) => {
     const newNotification: Notification = {
       id: Date.now().toString(),
@@ -81,8 +115,10 @@ function App() {
   };
 
   // Polling para verificar actualizaciones de transacciones del admin
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
   useEffect(() => {
-    if (!userId) return;
+    // Guard: Solo ejecutar si está autenticado y tenemos userId
+    if (!userId || !isAuthenticated) return;
 
     const checkForUpdates = async () => {
       try {
@@ -91,7 +127,72 @@ function App() {
         // Verificar transacciones que fueron revisadas por el admin
         transactions.forEach((transaction: any) => {
           const txId = transaction.transactionId || transaction.id;
+<<<<<<< HEAD
+
+          // Si la transacción fue revisada y no la hemos notificado antes
+          if (transaction.reviewedBy && !lastCheckedTransactions.has(txId)) {
+            // Construir representación del monto para buscar notificaciones previas
+            const amountStr = `$${Math.abs(transaction.amount).toLocaleString()}`;
+
+            // Eliminar notificaciones previas que indiquen "requiere autenticación" para la misma cantidad
+            setNotifications(prev => {
+              const filtered = prev.filter(n => {
+                const isPendingTitle = n.title && n.title.includes('Transacción requiere autenticación');
+                if (!isPendingTitle) return true;
+                // Si la notificación tiene meta.amount, usarla para comparar
+                if (n.meta && typeof n.meta.amount === 'number') {
+                  return n.meta.amount !== Math.abs(transaction.amount);
+                }
+                // Fallback a comparar texto (por compatibilidad con notificaciones antiguas)
+                return !(n.message && n.message.includes(amountStr));
+              });
+              try { localStorage.setItem('notifications', JSON.stringify(filtered)); } catch (e) {}
+              return filtered;
+            });
+
+            if (transaction.status === 'APPROVED') {
+              // usar id ligado a la transacción para evitar duplicados
+              setNotifications(prev => {
+                const newNotif: Notification = {
+                  id: `tx-${txId}`,
+                  title: 'Transacción aprobada por el banco',
+                  message: `Tu transacción de ${amountStr} fue aprobada por el analista.`,
+                  time: new Date().toLocaleString(),
+                  type: 'success',
+                  read: false
+                };
+                const next = [newNotif, ...prev];
+                try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+                return next;
+              });
+            } else if (transaction.status === 'REJECTED') {
+              setNotifications(prev => {
+                const newNotif: Notification = {
+                  id: `tx-${txId}`,
+                  title: 'Transacción rechazada',
+                  message: `Tu transacción de ${amountStr} fue rechazada por el banco.`,
+                  time: new Date().toLocaleString(),
+                  type: 'warning',
+                  read: false
+                };
+                const next = [newNotif, ...prev];
+                try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+                return next;
+              });
+            }
+
+            // Marcar como ya notificada
+            setLastCheckedTransactions(prev => {
+              const next = new Set([...prev, txId]);
+              try { localStorage.setItem('lastCheckedTransactions', JSON.stringify(Array.from(next))); } catch (e) {}
+              return next;
+            });
+            // Refrescar la página de inicio para actualizar el balance
+            setHomeRefreshKey(prev => prev + 1);
+          }
+=======
           handleTransactionReview(transaction, txId);
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
         });
       } catch (error) {
         console.error('Error checking for transaction updates:', error);
@@ -105,8 +206,44 @@ function App() {
     const interval = setInterval(checkForUpdates, 10000);
 
     return () => clearInterval(interval);
-  }, [userId, lastCheckedTransactions]);
+  }, [userId, lastCheckedTransactions, isAuthenticated]);
 
+<<<<<<< HEAD
+  const addNotification = (title: string, message: string, type: 'success' | 'warning' | 'info', meta?: { amount?: number; txId?: string }) => {
+    const newNotification: Notification = {
+      id: Date.now().toString(),
+      title,
+      message,
+      time: new Date().toLocaleString(),
+      type,
+      read: false,
+      meta
+    };
+    setNotifications(prev => {
+      const next = [newNotification, ...prev];
+      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => {
+      const next = prev.filter(n => n.id !== id);
+      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+  };
+
+  const markAllRead = () => {
+    setNotifications(prev => {
+      const next = prev.map(n => ({ ...n, read: true }));
+      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+  };
+
+=======
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
   const handleSubmit = async (transaction: TransactionRequest) => {
     setStatus('loading');
     setError(null);
@@ -114,6 +251,7 @@ function App() {
 
     try {
       const response = await validateTransaction(transaction);
+      console.debug('validateTransaction response', response);
       setResult(response);
       setStatus('success');
       
@@ -127,10 +265,21 @@ function App() {
           `Tu ${transactionTypeLabel} de $${amount} fue procesada exitosamente.`,
           'success'
         );
-      } else if (response.status === 'SUSPICIOUS' || response.status === 'REJECTED') {
+      } else if (response.status === 'SUSPICIOUS') {
         addNotification(
           'Transacción requiere autenticación',
+<<<<<<< HEAD
+          `Tu transacción de $${Math.abs(transaction.amount).toLocaleString()} fue marcada como sospechosa. Por favor, confirma tu identidad.`,
+          'warning',
+          { amount: Math.abs(transaction.amount) }
+        );
+      } else if (response.status === 'REJECTED') {
+        addNotification(
+          'Transacción rechazada',
+          `Tu transacción de $${Math.abs(transaction.amount).toLocaleString()} fue rechazada por el banco.`,
+=======
           `Tu transacción de $${amount} fue marcada como sospechosa. Por favor, confirma tu identidad.`,
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
           'warning'
         );
       }
@@ -151,6 +300,206 @@ function App() {
     setHomeRefreshKey(prev => prev + 1);
   };
 
+<<<<<<< HEAD
+  // ✅ DESPUÉS DE TODOS LOS HOOKS - Lógica condicional de autenticación
+  if (!isAuthenticated) {
+    if (authView === 'login') {
+      return (
+        <LoginPage
+          onLogin={async (userId, password) => {
+            try {
+              const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userId, password }),
+              });
+
+              const data = await response.json();
+
+              if (!response.ok) {
+                throw new Error(data.detail || 'Error al iniciar sesión');
+              }
+
+              login(userId, data.access_token, data.email, data.full_name);
+            } catch (err: any) {
+              throw err;
+            }
+          }}
+          onSwitchToRegister={() => setAuthView('register')}
+        />
+      );
+    } else if (authView === 'register') {
+      return (
+        <RegisterPage
+          onRegisterSuccess={(email: string) => {
+            setPendingVerificationEmail(email);
+            setAuthView('verify-email');
+          }}
+          onSwitchToLogin={() => setAuthView('login')}
+        />
+      );
+    } else if (authView === 'verify-email' && pendingVerificationEmail) {
+      return (
+        <VerifyEmailPage
+          email={pendingVerificationEmail}
+          onVerifySuccess={() => {
+            setPendingVerificationEmail(null);
+            setAuthView('login');
+          }}
+          onBackToLogin={() => {
+            setPendingVerificationEmail(null);
+            setAuthView('login');
+          }}
+        />
+      );
+    }
+    
+    // Fallback si algo sale mal
+    return (
+      <LoginPage
+        onLogin={async (userId, password) => {
+          try {
+            const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ user_id: userId, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.detail || 'Error al iniciar sesión');
+            }
+
+            login(userId, data.access_token, data.email, data.full_name);
+          } catch (err: any) {
+            throw err;
+          }
+        }}
+        onSwitchToRegister={() => setAuthView('register')}
+      />
+    );
+  }
+
+  // Componente reutilizable de navegación
+  const NavBar = () => (
+    <nav className="bg-white shadow-sm border-b sticky top-0 z-10">
+      <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <img src="assets/logo-full.svg" alt="FinTech Bank" className="h-24" />
+          <button className="ml-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-full text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-200">
+            {userId}
+          </button>
+        </div>
+        <div className="flex gap-4 items-center">
+          {/* Campanita de notificaciones */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 text-gray-600 hover:text-user-primary transition-colors" 
+              title="Notificaciones"
+            >
+              <Bell className="w-6 h-6" />
+              {/* Badge de notificaciones */}
+              {notifications.length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
+            </button>
+            
+            {/* Dropdown de notificaciones */}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-900">Notificaciones</h3>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No tienes notificaciones</p>
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div key={notification.id} className={`p-4 border-b border-gray-100 last:border-b-0 ${notification.read ? 'bg-gray-50' : ''}`}>
+                        <div className="flex items-start gap-3">
+                          <div className={`w-2 h-2 rounded-full mt-2 ${
+                            notification.type === 'success' ? 'bg-green-500' :
+                            notification.type === 'warning' ? 'bg-yellow-500' :
+                            'bg-blue-500'
+                          }`}></div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                                <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                                <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
+                              </div>
+                              <div className="ml-4 flex-shrink-0">
+                                <button onClick={() => removeNotification(notification.id)} className="text-xs text-gray-400 hover:text-red-500">Eliminar</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="p-3 border-t border-gray-200 text-center">
+                  <div className="flex items-center justify-between">
+                    <button onClick={markAllRead} className="text-sm text-gray-600 hover:text-gray-800 font-medium">Marcar todas leídas</button>
+                    <button 
+                      onClick={() => setShowNotifications(false)}
+                      className="text-sm text-user-primary hover:text-indigo-700 font-medium"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage('home')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                currentPage === 'home'
+                  ? 'bg-user-primary text-white'
+                  : 'text-gray-600 hover:text-user-primary hover:bg-gray-50'
+              }`}
+            >
+              Inicio
+            </button>
+            <button
+              onClick={() => setCurrentPage('new-transaction')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                currentPage === 'new-transaction'
+                  ? 'bg-user-primary text-white'
+                  : 'text-gray-600 hover:text-user-primary hover:bg-gray-50'
+              }`}
+            >
+              Transferir
+            </button>
+            <button
+              onClick={() => setCurrentPage('my-transactions')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                currentPage === 'my-transactions'
+                  ? 'bg-user-primary text-white'
+                  : 'text-gray-600 hover:text-user-primary hover:bg-gray-50'
+              }`}
+            >
+              Movimientos
+            </button>
+            <button
+              onClick={() => logout()}
+              className="px-4 py-2 rounded-lg font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+            >
+              Cerrar Sesión
+            </button>
+=======
   const renderPage = (): JSX.Element => {
     if (currentPage === 'home') {
       return (
@@ -229,6 +578,7 @@ function App() {
             >
               Powered by FinTech Bank v1.0
             </motion.div>
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
           </div>
         </div>
       </div>
@@ -245,12 +595,16 @@ function App() {
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.2 }}
         >
+<<<<<<< HEAD
+          <span>FinTech Bank v1.0</span>
+=======
           <Card>
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Realizar una Transferencia
             </h2>
             <TransactionForm onSubmit={handleSubmit} isLoading={status === 'loading'} />
           </Card>
+>>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
         </motion.div>
       );
     }
@@ -308,3 +662,4 @@ function App() {
 }
 
 export default App;
+

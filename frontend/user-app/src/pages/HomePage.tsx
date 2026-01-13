@@ -15,6 +15,7 @@ interface Transaction {
   amount: number;
   description?: string;
   timestamp?: string;
+  date?: string;
   createdAt?: string;
   status: string;
   transactionType?: string;
@@ -49,12 +50,16 @@ export function HomePage({ onNavigate }: HomePageProps) {
       try {
         setLoading(true);
         const data = await getUserTransactions(userId);
-        
+        // Ordenar por timestamp descendente para asegurar recientes primero
+        const sorted = Array.isArray(data)
+          ? data.slice().sort((a: any, b: any) => new Date(b.timestamp || b.date || 0).getTime() - new Date(a.timestamp || a.date || 0).getTime())
+          : [];
+
         // Guardar todas las transacciones para calcular balance
-        setAllTransactions(data);
-        
-        // Mostrar solo las últimas 3 en actividad reciente
-        setTransactions(data.slice(0, 3));
+        setAllTransactions(sorted);
+
+        // Mostrar solo las últimas 3 en actividad reciente (incluye todos los estados)
+        setTransactions(sorted.slice(0, 3));
       } catch (error) {
         console.error('Error loading transactions:', error);
         // Si hay error, mostrar transacciones de ejemplo
@@ -181,11 +186,15 @@ export function HomePage({ onNavigate }: HomePageProps) {
             {loading && <span className="text-xs text-gray-500">Cargando...</span>}
           </div>
           <div className="space-y-3">
-            {transactions.length === 0 && !loading ? (
+              {transactions.length === 0 && !loading ? (
               <p className="text-center text-gray-500 py-8">No hay transacciones recientes</p>
             ) : (
               transactions.map((tx, i) => {
-                const displayDate = tx.timestamp || tx.createdAt || 'Fecha desconocida';
+                // Formatear la fecha recibida desde el servidor (se envía en UTC)
+                const rawDate = tx.timestamp || tx.createdAt || tx.date || null;
+                const displayDate = rawDate ? new Date(rawDate).toLocaleString('es-ES', {
+                  day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                }) : 'Fecha desconocida';
                 
                 // Mejorar descripción mostrando el tipo si no hay descripción
                 let displayDesc = tx.description || 'Transacción sin descripción';
@@ -201,6 +210,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 
                 const amount = typeof tx.amount === 'number' ? tx.amount : 0;
                 
+                // Determinar etiqueta de estado
+                const statusLabel = tx.status === 'APPROVED' ? 'Aprobada' : tx.status === 'REJECTED' ? 'Rechazada' : tx.status === 'SUSPICIOUS' ? 'Sospechosa' : tx.status;
+                const statusClass = tx.status === 'APPROVED' ? 'bg-green-100 text-green-700' : tx.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700';
+
                 return (
                   <div key={tx.id || tx.transactionId || i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                     <div className="flex items-center gap-3">
@@ -218,8 +231,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
                       <p className={`font-semibold ${amount > 0 ? 'text-green-600' : 'text-gray-900'}`}>
                         {amount > 0 ? '+' : ''}${Math.abs(amount).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
                       </p>
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
-                        Aprobada
+                      <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${statusClass}`}>
+                        {statusLabel}
                       </span>
                     </div>
                   </div>

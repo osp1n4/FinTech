@@ -24,6 +24,18 @@ from src.application.use_cases import (
     EvaluateTransactionUseCase,
     ReviewTransactionUseCase,
 )
+from src.infrastructure.user_repository import UserRepository
+from src.infrastructure.auth_service import (
+    PasswordService,
+    JWTService,
+    EmailService
+)
+from src.application.auth_use_cases import (
+    RegisterUserUseCase,
+    LoginUserUseCase,
+    VerifyEmailUseCase,
+    GetCurrentUserUseCase
+)
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -92,8 +104,74 @@ def get_review_use_case(repository=Depends(get_repository)):
     return ReviewTransactionUseCase(repository)
 
 
+# Authentication Factories
+def get_user_repository():
+    """Factory para UserRepository"""
+    return UserRepository(settings.mongodb_url, settings.mongodb_database)
+
+
+def get_password_service():
+    """Factory para PasswordService"""
+    return PasswordService()
+
+
+def get_jwt_service():
+    """Factory para JWTService"""
+    return JWTService(
+        secret_key=settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+        access_token_expire_minutes=settings.jwt_access_token_expire_minutes
+    )
+
+
+def get_email_service():
+    """Factory para EmailService"""
+    return EmailService(
+        smtp_host=settings.smtp_host,
+        smtp_port=settings.smtp_port,
+        smtp_username=settings.smtp_username,
+        smtp_password=settings.smtp_password,
+        from_email=settings.from_email
+    )
+
+
+def get_register_use_case():
+    """Factory para RegisterUserUseCase"""
+    return RegisterUserUseCase(
+        user_repository=get_user_repository(),
+        password_service=get_password_service(),
+        email_service=get_email_service(),
+        base_url=settings.base_url
+    )
+
+
+def get_login_use_case():
+    """Factory para LoginUserUseCase"""
+    return LoginUserUseCase(
+        user_repository=get_user_repository(),
+        password_service=get_password_service(),
+        jwt_service=get_jwt_service()
+    )
+
+
+def get_verify_email_use_case():
+    """Factory para VerifyEmailUseCase"""
+    return VerifyEmailUseCase(
+        user_repository=get_user_repository(),
+        email_service=get_email_service()
+    )
+
+
+def get_current_user_use_case():
+    """Factory para GetCurrentUserUseCase"""
+    return GetCurrentUserUseCase(
+        user_repository=get_user_repository()
+    )
+
+
 # Registrar rutas con dependency injection
 from api_gateway.routes import router, api_v1_router, configure_dependencies
+from api_gateway.auth_routes import auth_router, configure_auth_dependencies
 
 configure_dependencies(
     repository_factory=get_repository,
@@ -103,8 +181,20 @@ configure_dependencies(
     publisher_factory=get_publisher
 )
 
+configure_auth_dependencies(
+    user_repository_factory=get_user_repository,
+    password_service_factory=get_password_service,
+    jwt_service_factory=get_jwt_service,
+    email_service_factory=get_email_service,
+    register_use_case_factory=get_register_use_case,
+    login_use_case_factory=get_login_use_case,
+    verify_email_use_case_factory=get_verify_email_use_case,
+    get_current_user_use_case_factory=get_current_user_use_case
+)
+
 app.include_router(router)
 app.include_router(api_v1_router)  # Añadir router v1
+app.include_router(auth_router)  # Añadir router de autenticación
 
 
 @app.get("/health")

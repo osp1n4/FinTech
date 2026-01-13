@@ -4,7 +4,7 @@
 
 const violationTranslations: Record<string, string> = {
   // Transacciones rápidas
-  'rapid_transactions_detected': 'Transacciones rápidas detectadas',
+  'rapid_transactions_detected': 'Límite de transacciones alcanzado',
   'approaching_transaction_limit': 'Aproximándose al límite de transacciones',
   
   // Monto

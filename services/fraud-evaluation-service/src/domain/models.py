@@ -14,11 +14,12 @@ La IA sugirió usar un dict para Location. Lo refactoricé a un Value Object inm
 para cumplir con DDD (Domain-Driven Design) y garantizar validación en construcción.
 Esto previene estados inválidos y cumple el principio "Make Invalid States Unrepresentable".
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
+import re
 
 
 class RiskLevel(Enum):
@@ -201,4 +202,42 @@ class FraudEvaluation:
         """
         self.user_authenticated = confirmed
         self.user_auth_timestamp = datetime.now()
+
+
+@dataclass
+class User:
+    """
+    Entidad que representa un usuario del sistema
+    
+    Incluye autenticación con contraseña hasheada y verificación de email
+    """
+    
+    user_id: str  # ID único del usuario (username)
+    email: str
+    hashed_password: str
+    full_name: str
+    created_at: datetime = field(default_factory=datetime.now)
+    is_active: bool = True
+    is_verified: bool = False
+    verification_token: Optional[str] = None
+    verification_token_expires: Optional[datetime] = None
+    
+    def __post_init__(self) -> None:
+        """Valida los datos del usuario al momento de construcción"""
+        if not self.user_id or not self.user_id.strip():
+            raise ValueError("User ID cannot be empty")
+        
+        if len(self.user_id) < 3:
+            raise ValueError("User ID must be at least 3 characters")
+            
+        # Validar formato de email
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, self.email):
+            raise ValueError("Invalid email format")
+        
+        if not self.hashed_password:
+            raise ValueError("Hashed password cannot be empty")
+            
+        if not self.full_name or not self.full_name.strip():
+            raise ValueError("Full name cannot be empty")
 
