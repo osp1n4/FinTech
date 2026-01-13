@@ -15,7 +15,7 @@ Los 162 tests validan completamente las historias de usuario con 100% de cobertu
 | **Tests Pasando** | 162 (100%) |
 | **Tests Fallando** | 0 (0%) |
 | **Tests Omitidos** | 0 (0%) |
-| **Cobertura de Código** | 89% |
+| **Cobertura de Código** | 95% |
 | **Cobertura de HU** | 100% |
 
 ---
