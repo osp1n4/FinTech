@@ -1,11 +1,11 @@
 # 🧪 Test Cases - Fraud Detection Engine
 
 **Proyecto:** Fraud Detection Engine  
-**Fecha:** Enero 12, 2026  
+**Fecha:** Enero 08, 2026  
 **Total HU:** 14  
 **Total Test Cases:** 63  
 **Tests Implementados:** 162  
-**Cobertura:** 89%
+**Cobertura:** 95%
 
 ---
 
