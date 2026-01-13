@@ -12,8 +12,8 @@ from src.domain.models import (
 
 def test_location_validation():
     loc = Location(latitude=10.0, longitude=20.0)
-    assert loc.latitude == 10.0
-    assert loc.longitude == 20.0
+    assert loc.latitude == pytest.approx(10.0)
+    assert loc.longitude == pytest.approx(20.0)
 
     with pytest.raises(ValueError):
         Location(latitude=100.0, longitude=0.0)
