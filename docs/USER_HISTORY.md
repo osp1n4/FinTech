@@ -29,10 +29,6 @@ y finalmente el código que hace pasar esos tests. No escribimos código sin tes
 **Descripción:**  
 El sistema debe exponer un endpoint REST que reciba transacciones con información del usuario, monto, ubicación y dispositivo. La respuesta debe ser inmediata (202 Accepted) y el procesamiento ocurre de forma asíncrona.
 
-**Estimación:** 3 puntos  
-**Prioridad:** Alta  
-**Dependencias:** Ninguna
-
 #### Criterios de Aceptación
 
 ```gherkin

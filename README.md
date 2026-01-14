@@ -1,4 +1,4 @@
-# 🛡️ Fraud Detection Engine
+# 🛡️ Fintech Bank
 
 Motor de detección de fraude implementado con **Clean Architecture**, **TDD/BDD**, principios **SOLID** y patrón de diseño **Strategy**.
 
@@ -53,6 +53,92 @@ Para una descripción más detallada ver:
 - **L** (Liskov Substitution): Las estrategias son intercambiables
 - **I** (Interface Segregation): Interfaces específicas para cada puerto
 - **D** (Dependency Inversion): Los casos de uso dependen de abstracciones, no de implementaciones
+
+## 🛠️ Tecnologías Utilizadas
+
+### Backend
+
+- **Lenguaje**: Python 3.11+
+- **Framework Web**: FastAPI 0.109.1
+- **Servidor ASGI**: Uvicorn 0.27.0 (con extras standard)
+- **Validación de Datos**: Pydantic 2.5.0, Pydantic Settings 2.1.0
+- **Base de Datos**: 
+  - MongoDB (PyMongo 4.6.0)
+  - Redis 5.0.1 (caché y sesiones)
+- **Message Broker**: RabbitMQ (Pika 1.3.2)
+- **Autenticación**: 
+  - Python-JOSE 3.3.0 (JWT con cryptography)
+  - Bcrypt 4.0.0 (hash de contraseñas)
+- **Geolocalización**: Geopy 2.4.1
+- **Email**: Aiosmtplib 3.0.1
+- **HTTP Client**: HTTPX 0.27.2
+- **Gestión de Dependencias**: Poetry
+- **Herramientas de Desarrollo**:
+  - Black 24.1.1 (formateo de código)
+  - Pylint 3.0.3 (linting)
+  - MyPy 1.8.0 (type checking)
+
+### Frontend
+
+#### User App (`frontend/user-app`)
+- **Framework**: React 18.3.1
+- **Lenguaje**: TypeScript 5.7.2
+- **Build Tool**: Vite 6.0.7
+- **Estilos**: Tailwind CSS 3.4.17
+- **HTTP Client**: Axios 1.7.9
+- **Animaciones**: Framer Motion 12.0.1
+- **Iconos**: Lucide React 0.263.1
+
+#### Admin Dashboard (`frontend/admin-dashboard`)
+- **Framework**: React 18.3.1
+- **Lenguaje**: TypeScript 5.7.2
+- **Build Tool**: Vite 6.0.7
+- **Estilos**: Tailwind CSS 3.4.1
+- **HTTP Client**: Axios 1.7.9
+- **Routing**: React Router DOM 7.0.2
+- **Estado Global**: Zustand 5.0.2
+- **Tablas**: TanStack React Table 8.20.6
+- **Gráficos**: Recharts 2.15.0
+- **Notificaciones**: React Hot Toast 2.4.1
+- **Fechas**: date-fns 4.1.0
+
+### Testing
+
+#### Backend
+- **Framework**: Pytest 7.4.4
+- **Cobertura**: Pytest-cov 4.1.0
+- **Async Testing**: Pytest-asyncio 0.23.3
+- **Mocking**: Pytest-mock 3.12.0
+
+#### Frontend
+- **Framework**: Vitest 1.1.0
+- **Testing Library**: 
+  - @testing-library/react 14.1.2
+  - @testing-library/jest-dom 6.1.5
+  - @testing-library/user-event 14.5.1
+- **DOM Environment**: jsdom 23.0.1
+- **UI Testing**: @vitest/ui 1.1.0
+
+#### End-to-End (E2E)
+- **Framework**: Playwright 1.41.0
+- **Lenguaje**: TypeScript 5.3.3
+- **Navegadores**: Chromium, Firefox, WebKit
+- **Características**:
+  - Screenshots automáticos en fallos
+  - Videos de ejecución (on-first-retry)
+  - Trace con timeline completo
+  - HTML Reporter interactivo
+  - Tests en paralelo (3 workers)
+  - Multi-browser support
+
+### Infraestructura
+
+- **Orquestación**: Docker Compose
+- **Bases de Datos**:
+  - MongoDB (almacenamiento principal)
+  - Redis (caché y sesiones)
+- **Message Queue**: RabbitMQ
+- **Web Server**: Nginx (para frontends en producción)
 
 ## 🎯 Historias de Usuario Implementadas
 
@@ -163,10 +249,10 @@ cd frontend/admin-dashboard && npm test
 
 **5 estrategias** implementadas con patrón Strategy:
 
-1. **Amount Threshold** - Monto > $1,500 USD → `HIGH_RISK`
+1. **Amount Threshold** - Monto > $1000 USD → `HIGH_RISK`
 2. **Location Check** - Distancia > 100 km → `HIGH_RISK`
 3. **Device Validation** - Dispositivo desconocido → `HIGH_RISK`
-4. **Rapid Transaction** - >3 transacciones en 5 min → `HIGH_RISK`
+4. **Rapid Transaction** - >2 transacciones en 5 min → `HIGH_RISK`
 5. **Unusual Time** - Horario fuera del patrón → `MEDIUM/HIGH_RISK`
 
 **Lógica de combinación:**
