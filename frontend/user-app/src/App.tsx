@@ -1,27 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Bell } from 'lucide-react';
 import { Card } from './components/ui/Card';
 import { TransactionForm } from './components/TransactionForm';
 import { ResultDisplay } from './components/ResultDisplay';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { HomePage } from './pages/HomePage';
-<<<<<<< HEAD
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
-=======
-import { NavBar } from './components/NavBar';
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
 import { validateTransaction, getUserTransactions } from './services/api';
 import { useUser } from './context/UserContext';
 import type { TransactionRequest, TransactionResponse, TransactionStatus } from './types/transaction';
 
 type Page = 'home' | 'new-transaction' | 'my-transactions';
-<<<<<<< HEAD
 type AuthView = 'login' | 'register' | 'verify-email';
-=======
 type NotificationType = 'success' | 'warning' | 'info';
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
 
 interface Notification {
   id: string;
@@ -72,50 +66,40 @@ function App() {
     }
   });
 
-<<<<<<< HEAD
-  // ✅ TODOS LOS HOOKS SIEMPRE AL INICIO - Polling para verificar actualizaciones de transacciones del admin
-=======
-  const addNotification = (title: string, message: string, type: NotificationType) => {
+  const addNotification = (title: string, message: string, type: NotificationType, meta?: { amount?: number; txId?: string }) => {
     const newNotification: Notification = {
       id: Date.now().toString(),
       title,
       message,
-      time: 'Justo ahora',
+      time: new Date().toLocaleString(),
       type,
-      read: false
+      read: false,
+      meta
     };
-    setNotifications(prev => [newNotification, ...prev]);
+    setNotifications(prev => {
+      const next = [newNotification, ...prev];
+      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
   };
 
-  const handleTransactionReview = (transaction: any, txId: string) => {
-    if (!transaction.reviewedBy || lastCheckedTransactions.has(txId)) {
-      return;
-    }
+  const removeNotification = (id: string) => {
+    setNotifications(prev => {
+      const next = prev.filter(n => n.id !== id);
+      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+  };
 
-    const amount = Math.abs(transaction.amount).toLocaleString();
-    
-    if (transaction.status === 'APPROVED') {
-      addNotification(
-        'Transacción aprobada por el banco',
-        `Tu transacción de $${amount} fue aprobada por el analista.`,
-        'success'
-      );
-    } else if (transaction.status === 'REJECTED') {
-      addNotification(
-        'Transacción rechazada',
-        `Tu transacción de $${amount} fue rechazada por el banco.`,
-        'warning'
-      );
-    }
-    
-    // Marcar como ya notificada
-    setLastCheckedTransactions(prev => new Set([...prev, txId]));
-    // Refrescar la página de inicio para actualizar el balance
-    setHomeRefreshKey(prev => prev + 1);
+  const markAllRead = () => {
+    setNotifications(prev => {
+      const next = prev.map(n => ({ ...n, read: true }));
+      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
   };
 
   // Polling para verificar actualizaciones de transacciones del admin
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
   useEffect(() => {
     // Guard: Solo ejecutar si está autenticado y tenemos userId
     if (!userId || !isAuthenticated) return;
@@ -127,7 +111,6 @@ function App() {
         // Verificar transacciones que fueron revisadas por el admin
         transactions.forEach((transaction: any) => {
           const txId = transaction.transactionId || transaction.id;
-<<<<<<< HEAD
 
           // Si la transacción fue revisada y no la hemos notificado antes
           if (transaction.reviewedBy && !lastCheckedTransactions.has(txId)) {
@@ -190,9 +173,6 @@ function App() {
             // Refrescar la página de inicio para actualizar el balance
             setHomeRefreshKey(prev => prev + 1);
           }
-=======
-          handleTransactionReview(transaction, txId);
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
         });
       } catch (error) {
         console.error('Error checking for transaction updates:', error);
@@ -208,42 +188,6 @@ function App() {
     return () => clearInterval(interval);
   }, [userId, lastCheckedTransactions, isAuthenticated]);
 
-<<<<<<< HEAD
-  const addNotification = (title: string, message: string, type: 'success' | 'warning' | 'info', meta?: { amount?: number; txId?: string }) => {
-    const newNotification: Notification = {
-      id: Date.now().toString(),
-      title,
-      message,
-      time: new Date().toLocaleString(),
-      type,
-      read: false,
-      meta
-    };
-    setNotifications(prev => {
-      const next = [newNotification, ...prev];
-      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
-      return next;
-    });
-  };
-
-  const removeNotification = (id: string) => {
-    setNotifications(prev => {
-      const next = prev.filter(n => n.id !== id);
-      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
-      return next;
-    });
-  };
-
-  const markAllRead = () => {
-    setNotifications(prev => {
-      const next = prev.map(n => ({ ...n, read: true }));
-      try { localStorage.setItem('notifications', JSON.stringify(next)); } catch (e) {}
-      return next;
-    });
-  };
-
-=======
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
   const handleSubmit = async (transaction: TransactionRequest) => {
     setStatus('loading');
     setError(null);
@@ -268,7 +212,6 @@ function App() {
       } else if (response.status === 'SUSPICIOUS') {
         addNotification(
           'Transacción requiere autenticación',
-<<<<<<< HEAD
           `Tu transacción de $${Math.abs(transaction.amount).toLocaleString()} fue marcada como sospechosa. Por favor, confirma tu identidad.`,
           'warning',
           { amount: Math.abs(transaction.amount) }
@@ -277,9 +220,6 @@ function App() {
         addNotification(
           'Transacción rechazada',
           `Tu transacción de $${Math.abs(transaction.amount).toLocaleString()} fue rechazada por el banco.`,
-=======
-          `Tu transacción de $${amount} fue marcada como sospechosa. Por favor, confirma tu identidad.`,
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
           'warning'
         );
       }
@@ -300,8 +240,7 @@ function App() {
     setHomeRefreshKey(prev => prev + 1);
   };
 
-<<<<<<< HEAD
-  // ✅ DESPUÉS DE TODOS LOS HOOKS - Lógica condicional de autenticación
+  // Lógica condicional de autenticación
   if (!isAuthenticated) {
     if (authView === 'login') {
       return (
@@ -499,19 +438,17 @@ function App() {
             >
               Cerrar Sesión
             </button>
-=======
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+
   const renderPage = (): JSX.Element => {
     if (currentPage === 'home') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-          <NavBar 
-            currentPage={currentPage} 
-            notifications={notifications} 
-            showNotifications={showNotifications}
-            onPageChange={setCurrentPage}
-            onToggleNotifications={() => setShowNotifications(!showNotifications)}
-            onCloseNotifications={() => setShowNotifications(false)}
-          />
+          <NavBar />
           <HomePage key={homeRefreshKey} onNavigate={setCurrentPage} />
         </div>
       );
@@ -520,14 +457,7 @@ function App() {
     if (currentPage === 'my-transactions') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-          <NavBar 
-            currentPage={currentPage} 
-            notifications={notifications} 
-            showNotifications={showNotifications}
-            onPageChange={setCurrentPage}
-            onToggleNotifications={() => setShowNotifications(!showNotifications)}
-            onCloseNotifications={() => setShowNotifications(false)}
-          />
+          <NavBar />
           <TransactionsPage />
         </div>
       );
@@ -539,14 +469,7 @@ function App() {
   const renderTransactionPage = (): JSX.Element => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <NavBar 
-          currentPage={currentPage} 
-          notifications={notifications} 
-          showNotifications={showNotifications}
-          onPageChange={setCurrentPage}
-          onToggleNotifications={() => setShowNotifications(!showNotifications)}
-          onCloseNotifications={() => setShowNotifications(false)}
-        />
+        <NavBar />
         
         <div className="py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-md mx-auto">
@@ -578,7 +501,6 @@ function App() {
             >
               Powered by FinTech Bank v1.0
             </motion.div>
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
           </div>
         </div>
       </div>
@@ -595,16 +517,12 @@ function App() {
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.2 }}
         >
-<<<<<<< HEAD
-          <span>FinTech Bank v1.0</span>
-=======
           <Card>
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Realizar una Transferencia
             </h2>
             <TransactionForm onSubmit={handleSubmit} isLoading={status === 'loading'} />
           </Card>
->>>>>>> bf056f362333762157a19e9dee09cd17298e7ff7
         </motion.div>
       );
     }

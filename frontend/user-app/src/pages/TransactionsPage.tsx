@@ -8,6 +8,7 @@ import { useToast } from '../components/ToastContainer';
 
 interface Transaction {
   id: string;
+  transactionId?: string;
   amount: number;
   location: string;
   timestamp: string;
