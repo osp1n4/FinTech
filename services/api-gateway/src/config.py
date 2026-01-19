@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # Permitir campos extra en variables de entorno
 
 
 # Singleton instance
