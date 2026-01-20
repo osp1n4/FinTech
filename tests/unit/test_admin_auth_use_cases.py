@@ -152,10 +152,13 @@ class TestRegisterAdminUseCase:
         mock_password_service = Mock()
         mock_password_service.hash_password = Mock(return_value="$2b$12$hashed_password")
         
+        mock_email_service = Mock()
+        mock_email_service.send_verification_email = AsyncMock()
+        
         use_case = RegisterAdminUseCase(
             admin_repository=mock_repo,
             password_service=mock_password_service,
-            email_service=Mock(),
+            email_service=mock_email_service,
             base_url="http://localhost:3001"
         )
         
@@ -488,9 +491,12 @@ class TestVerifyAdminEmailUseCase:
         mock_repo.find_by_verification_token = AsyncMock(return_value=admin)
         mock_repo.update_admin = AsyncMock()
         
+        mock_email_service = Mock()
+        mock_email_service.send_welcome_email = AsyncMock()
+        
         use_case = VerifyAdminEmailUseCase(
             admin_repository=mock_repo,
-            email_service=Mock()
+            email_service=mock_email_service
         )
         
         result = await use_case.execute(token="123456")
