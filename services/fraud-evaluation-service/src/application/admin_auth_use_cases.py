@@ -87,10 +87,10 @@ class RegisterAdminUseCase:
             ValueError: Si el admin_id o email ya existen
         """
         # Verificar que el admin no exista
-        if await self.admin_repository.admin_exists(admin_id):
+        if self.admin_repository.admin_exists(admin_id):
             raise ValueError("Admin ID already exists")
         
-        if await self.admin_repository.email_exists(email):
+        if self.admin_repository.email_exists(email):
             raise ValueError("Email already registered")
         
         # Hashear la contraseña
@@ -112,7 +112,7 @@ class RegisterAdminUseCase:
         )
         
         # Guardar en la base de datos (colección 'admins')
-        await self.admin_repository.save_admin(admin)
+        self.admin_repository.save_admin(admin)
         
         # Enviar email de verificación
         await self.email_service.send_verification_email(
@@ -191,7 +191,7 @@ class LoginAdminUseCase:
             ValueError: Si las credenciales son inválidas, cuenta inactiva o email no verificado
         """
         # Buscar administrador
-        admin = await self.admin_repository.find_by_admin_id(admin_id)
+        admin = self.admin_repository.find_by_admin_id(admin_id)
         
         if not admin:
             raise ValueError("Invalid credentials")
@@ -217,7 +217,7 @@ class LoginAdminUseCase:
         access_token = self.jwt_service.create_access_token(token_data)
         
         # Actualizar último login
-        await self.admin_repository.update_last_login(admin.admin_id)
+        self.admin_repository.update_last_login(admin.admin_id)
         
         return {
             "access_token": access_token,
@@ -280,7 +280,7 @@ class VerifyAdminEmailUseCase:
             ValueError: Si el token es inválido o ha expirado
         """
         # Buscar admin por token
-        admin = await self.admin_repository.find_by_verification_token(token)
+        admin = self.admin_repository.find_by_verification_token(token)
         
         if not admin:
             raise ValueError("Invalid verification token")
@@ -295,12 +295,12 @@ class VerifyAdminEmailUseCase:
         admin.verification_token_expires = None
         
         # Actualizar en la base de datos
-        await self.admin_repository.update_admin(admin)
+        self.admin_repository.update_admin(admin)
         
         # Enviar email de bienvenida
         await self.email_service.send_welcome_email(
             to_email=admin.email,
-            admin_name=admin.full_name
+            user_name=admin.full_name
         )
         
         return {
@@ -347,7 +347,7 @@ class GetCurrentAdminUseCase:
             ValueError: Si el administrador no existe
         """
         # Buscar admin por admin_id
-        admin = await self.admin_repository.find_by_admin_id(admin_id)
+        admin = self.admin_repository.find_by_admin_id(admin_id)
         
         if not admin:
             raise ValueError("Administrator not found")

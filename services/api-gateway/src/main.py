@@ -180,8 +180,7 @@ def get_current_user_use_case():
 
 def get_admin_repository():
     """Factory para AdminRepository"""
-    mongodb = get_mongodb()
-    return AdminRepository(mongodb.get_database())
+    return AdminRepository(settings.mongodb_url, settings.mongodb_database)
 
 
 def get_register_admin_use_case():

@@ -193,7 +193,7 @@ export default function VerifyEmailPage() {
               <button
                 type="button"
                 className="font-medium text-purple-500 hover:text-purple-400 transition"
-                onClick={() => toast.info('Función de reenvío próximamente')}
+                onClick={() => toast('Función de reenvío próximamente')}
               >
                 Reenviar código
               </button>
