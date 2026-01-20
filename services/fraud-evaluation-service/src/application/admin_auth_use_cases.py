@@ -11,9 +11,9 @@ Cumple SOLID:
 """
 from datetime import datetime, timedelta
 from typing import Optional
-from domain.models import Admin
-from infrastructure.admin_repository import AdminRepository
-from infrastructure.auth_service import (
+from src.domain.models import Admin
+from src.infrastructure.admin_repository import AdminRepository
+from src.infrastructure.auth_service import (
     PasswordService,
     JWTService,
     EmailService,

@@ -12,7 +12,7 @@ Cumplimiento SOLID:
 from typing import Optional
 from datetime import datetime
 from pymongo import MongoClient
-from domain.models import Admin
+from src.domain.models import Admin
 
 
 class AdminRepository:

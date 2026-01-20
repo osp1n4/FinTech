@@ -221,7 +221,7 @@ def get_current_admin_use_case():
 # Registrar rutas con dependency injection
 from api_gateway.routes import router, api_v1_router, configure_dependencies
 from api_gateway.auth_routes import auth_router, configure_auth_dependencies
-from src.admin_auth_routes import admin_auth_router, configure_admin_auth_dependencies
+from api_gateway.admin_auth_routes import admin_auth_router, configure_admin_auth_dependencies
 
 configure_dependencies(
     repository_factory=get_repository,
