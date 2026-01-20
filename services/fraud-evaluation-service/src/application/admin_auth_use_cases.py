@@ -308,3 +308,56 @@ class VerifyAdminEmailUseCase:
             "message": "Email verified successfully",
             "admin_id": admin.admin_id
         }
+
+
+class GetCurrentAdminUseCase:
+    """
+    Caso de uso para obtener los datos del administrador actual
+    
+    Este caso de uso se utiliza para el endpoint GET /api/v1/admin/auth/me
+    Requiere que el admin_id haya sido extraído y validado del JWT
+    """
+    
+    def __init__(self, admin_repository):
+        """
+        Args:
+            admin_repository: Repositorio de administradores
+        """
+        self.admin_repository = admin_repository
+    
+    async def execute(self, admin_id: str) -> dict:
+        """
+        Obtiene los datos del administrador actual
+        
+        Args:
+            admin_id: ID del administrador (extraído del JWT)
+            
+        Returns:
+            Dict con los datos del administrador:
+            {
+                "admin_id": str,
+                "email": str,
+                "full_name": str,
+                "is_verified": bool,
+                "is_active": bool,
+                "created_at": str (ISO format)
+            }
+            
+        Raises:
+            ValueError: Si el administrador no existe
+        """
+        # Buscar admin por admin_id
+        admin = await self.admin_repository.find_by_admin_id(admin_id)
+        
+        if not admin:
+            raise ValueError("Administrator not found")
+        
+        # Retornar datos del admin (sin información sensible)
+        return {
+            "admin_id": admin.admin_id,
+            "email": admin.email,
+            "full_name": admin.full_name,
+            "is_verified": admin.is_verified,
+            "is_active": admin.is_active,
+            "created_at": admin.created_at.isoformat()
+        }

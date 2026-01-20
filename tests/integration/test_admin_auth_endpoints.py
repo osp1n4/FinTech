@@ -16,29 +16,29 @@ import pytest
 import os
 
 
-class TestAdminAuthRoutesModuleRED:
-    """Tests de Fase RED - Verificar que el módulo no existe"""
+class TestAdminAuthRoutesModuleGREEN:
+    """Tests de Fase GREEN - Verificar que el módulo existe"""
     
-    def test_admin_auth_routes_module_does_not_exist(self):
+    def test_admin_auth_routes_module_exists(self):
         """
-        TEST-RED-001: Verificar que admin_auth_routes.py NO existe (Fase RED)
+        TEST-GREEN-001: Verificar que admin_auth_routes.py EXISTE (Fase GREEN)
         
-        Given: Proyecto sin implementación de admin auth routes
+        Given: Implementación completa de admin auth routes
         When: Buscar archivo admin_auth_routes.py
-        Then: El archivo no debe existir (esto confirma fase RED)
+        Then: El archivo debe existir (esto confirma fase GREEN)
         """
         admin_routes_path = os.path.join(
             os.path.dirname(__file__),
             "../../services/api-gateway/src/admin_auth_routes.py"
         )
         
-        # En fase RED, el archivo NO debe existir
-        assert not os.path.exists(admin_routes_path), \
-            "ERROR: admin_auth_routes.py YA EXISTE - No es fase RED"
+        # En fase GREEN, el archivo DEBE existir
+        assert os.path.exists(admin_routes_path), \
+            "ERROR: admin_auth_routes.py NO EXISTE - Implementar fase GREEN primero"
     
     def test_admin_repository_module_exists(self):
         """
-        TEST-RED-002: Verificar que AdminRepository existe (del paso anterior)
+        TEST-GREEN-002: Verificar que AdminRepository existe (del paso anterior)
         
         Given: Paso 2 completado
         When: Buscar archivo admin_repository.py
@@ -54,7 +54,7 @@ class TestAdminAuthRoutesModuleRED:
     
     def test_admin_auth_use_cases_module_exists(self):
         """
-        TEST-RED-003: Verificar que admin_auth_use_cases existe (del paso anterior)
+        TEST-GREEN-003: Verificar que admin_auth_use_cases existe (del paso anterior)
         
         Given: Paso 3 completado
         When: Buscar archivo admin_auth_use_cases.py

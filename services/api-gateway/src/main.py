@@ -25,6 +25,7 @@ from src.application.use_cases import (
     ReviewTransactionUseCase,
 )
 from src.infrastructure.user_repository import UserRepository
+from src.infrastructure.admin_repository import AdminRepository
 from src.infrastructure.auth_service import (
     PasswordService,
     JWTService,
@@ -35,6 +36,12 @@ from src.application.auth_use_cases import (
     LoginUserUseCase,
     VerifyEmailUseCase,
     GetCurrentUserUseCase
+)
+from src.application.admin_auth_use_cases import (
+    RegisterAdminUseCase,
+    LoginAdminUseCase,
+    VerifyAdminEmailUseCase,
+    GetCurrentAdminUseCase
 )
 
 # Crear aplicación FastAPI
@@ -169,9 +176,52 @@ def get_current_user_use_case():
     )
 
 
+# ========== FACTORIES PARA ADMIN AUTH ==========
+
+def get_admin_repository():
+    """Factory para AdminRepository"""
+    mongodb = get_mongodb()
+    return AdminRepository(mongodb.get_database())
+
+
+def get_register_admin_use_case():
+    """Factory para RegisterAdminUseCase"""
+    return RegisterAdminUseCase(
+        admin_repository=get_admin_repository(),
+        password_service=get_password_service(),
+        email_service=get_email_service(),
+        base_url="http://localhost:3001"  # URL del admin dashboard
+    )
+
+
+def get_login_admin_use_case():
+    """Factory para LoginAdminUseCase"""
+    return LoginAdminUseCase(
+        admin_repository=get_admin_repository(),
+        password_service=get_password_service(),
+        jwt_service=get_jwt_service()
+    )
+
+
+def get_verify_admin_email_use_case():
+    """Factory para VerifyAdminEmailUseCase"""
+    return VerifyAdminEmailUseCase(
+        admin_repository=get_admin_repository(),
+        email_service=get_email_service()
+    )
+
+
+def get_current_admin_use_case():
+    """Factory para GetCurrentAdminUseCase"""
+    return GetCurrentAdminUseCase(
+        admin_repository=get_admin_repository()
+    )
+
+
 # Registrar rutas con dependency injection
 from api_gateway.routes import router, api_v1_router, configure_dependencies
 from api_gateway.auth_routes import auth_router, configure_auth_dependencies
+from src.admin_auth_routes import admin_auth_router, configure_admin_auth_dependencies
 
 configure_dependencies(
     repository_factory=get_repository,
@@ -192,9 +242,21 @@ configure_auth_dependencies(
     get_current_user_use_case_factory=get_current_user_use_case
 )
 
+configure_admin_auth_dependencies(
+    admin_repository_factory=get_admin_repository,
+    password_service_factory=get_password_service,
+    jwt_service_factory=get_jwt_service,
+    email_service_factory=get_email_service,
+    register_admin_use_case_factory=get_register_admin_use_case,
+    login_admin_use_case_factory=get_login_admin_use_case,
+    verify_admin_email_use_case_factory=get_verify_admin_email_use_case,
+    get_current_admin_use_case_factory=get_current_admin_use_case
+)
+
 app.include_router(router)
 app.include_router(api_v1_router)  # Añadir router v1
 app.include_router(auth_router)  # Añadir router de autenticación
+app.include_router(admin_auth_router)  # Añadir router de autenticación de admins
 
 
 @app.get("/health")
