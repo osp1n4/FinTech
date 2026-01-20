@@ -241,3 +241,80 @@ class User:
         if not self.full_name or not self.full_name.strip():
             raise ValueError("Full name cannot be empty")
 
+
+@dataclass
+class Admin:
+    """
+    Entidad que representa un administrador del sistema
+    
+    Cumplimiento SOLID:
+    - Single Responsibility: Solo representa datos de administrador
+    - Open/Closed: Extensible mediante herencia sin modificación
+    - Liskov Substitution: Puede sustituir a cualquier entidad de usuario
+    - Interface Segregation: N/A (no hay interfaces)
+    - Dependency Inversion: No depende de implementaciones concretas
+    
+    Incluye autenticación con contraseña hasheada y verificación de email
+    Similar a User pero con capacidades administrativas
+    """
+    
+    admin_id: str  # ID único del administrador (username)
+    email: str
+    hashed_password: str
+    full_name: str
+    created_at: datetime = field(default_factory=datetime.now)
+    is_active: bool = True
+    is_verified: bool = False
+    verification_token: Optional[str] = None
+    verification_token_expires: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    
+    def __post_init__(self) -> None:
+        """
+        Valida los datos del administrador al momento de construcción
+        
+        Siguiendo principio "Fail Fast" - valida en construcción
+        Siguiendo principio "Make Invalid States Unrepresentable"
+        """
+        if not self.admin_id or not self.admin_id.strip():
+            raise ValueError("Admin ID cannot be empty")
+        
+        if len(self.admin_id) < 3:
+            raise ValueError("admin_id must be at least 3 characters")
+        
+        # Validar formato de admin_id (alfanumérico y guiones bajos)
+        if not re.match(r'^[a-zA-Z0-9_]+$', self.admin_id):
+            raise ValueError("admin_id can only contain letters, numbers, and underscores")
+            
+        # Validar formato de email
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, self.email):
+            raise ValueError("Invalid email format")
+        
+        if not self.hashed_password:
+            raise ValueError("Hashed password cannot be empty")
+            
+        if not self.full_name or not self.full_name.strip():
+            raise ValueError("Full name cannot be empty")
+        
+        if len(self.full_name) < 2:
+            raise ValueError("full_name must be at least 2 characters")
+    
+    def to_dict(self) -> dict:
+        """
+        Convierte el Admin a un diccionario para MongoDB
+        
+        Excluye el campo hashed_password por seguridad en serialización
+        """
+        return {
+            "admin_id": self.admin_id,
+            "email": self.email,
+            "full_name": self.full_name,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "is_active": self.is_active,
+            "is_verified": self.is_verified,
+            "verification_token": self.verification_token,
+            "verification_token_expires": self.verification_token_expires.isoformat() if self.verification_token_expires else None,
+            "last_login": self.last_login.isoformat() if self.last_login else None,
+        }
+
