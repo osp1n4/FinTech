@@ -4,6 +4,8 @@ import { CreditCard, DollarSign, Activity } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getUserTransactions } from '../services/api';
 import { useState, useEffect } from 'react';
+import { ChatButton, ChatModal } from '../components/chatbot';
+import { useChatbot } from '../hooks/useChatbot';
 
 interface HomePageProps {
   readonly onNavigate: (page: 'new-transaction' | 'my-transactions') => void;
@@ -26,6 +28,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Chatbot hook
+  const chatbot = useChatbot();
   
   const cardNumber = "**** **** **** 4521";
   
@@ -249,5 +254,17 @@ export function HomePage({ onNavigate }: HomePageProps) {
         </Card>
       </motion.div>
     </div>
+    
+    {/* Chatbot de Soporte */}
+    <ChatButton onClick={chatbot.openChat} />
+    <ChatModal
+      isOpen={chatbot.isOpen}
+      onClose={chatbot.closeChat}
+      messages={chatbot.messages}
+      isTyping={chatbot.isTyping}
+      onSendMessage={chatbot.sendMessage}
+      onSelectFAQ={chatbot.selectFAQ}
+    />
+  </div>
   );
 }
