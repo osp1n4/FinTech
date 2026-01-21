@@ -1426,7 +1426,6 @@ Scenario: TC-HU-016-06 - Persistencia de conversación
 
 ---
 
-
 **Documento actualizado:** Enero 21, 2026    
 **Versión:** 1.2  
 **Módulos agregados:** MÓDULO 7 - Chatbot de Soporte FAQ
