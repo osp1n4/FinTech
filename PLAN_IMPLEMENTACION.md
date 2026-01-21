@@ -354,7 +354,7 @@ Integrar chatbot en HomePage y validar funcionamiento completo.
 | Métrica | Objetivo | Estado |
 |---------|----------|--------|
 | Cobertura | >70% | ✅ 98.43% |
-| Tests Unitarios | 24+ | ✅ 62 |
+| Tests Unitarios | 24+ | ✅ 76 |
 | Tests E2E | 6+ | ⏳ |
 | FAQs implementadas | 15+ | ✅ 17 |
 | Componentes | 5 | ✅ 5 |
@@ -469,11 +469,12 @@ git push
 - [x] Estilos Tailwind aplicados
 - [x] Cobertura 98.43%
 
-### Paso 3 - Business Logic
-- [ ] `useChatbot.ts` hook completo
-- [ ] Flujo de conversación funcional
-- [ ] Fallback para no coincidencias
-- [ ] 6 tests unitarios passing
+### Paso 3 - Business Logic ✅ COMPLETADO
+- [x] `useChatbot.ts` hook completo
+- [x] Flujo de conversación funcional
+- [x] Fallback para no coincidencias
+- [x] 14 tests unitarios passing
+- [x] Cobertura 100%
 
 ### Paso 4 - Integration
 - [ ] Chatbot visible en HomePage
