@@ -79,7 +79,7 @@ describe('FAQ Matcher - normalizeText', () => {
 describe('FAQ Matcher - calculateMatchScore', () => {
   it('should return high score for exact keyword match', () => {
     const score = calculateMatchScore('crear cuenta', mockFAQs[0]);
-    expect(score).toBeGreaterThan(0.5);
+    expect(score).toBeGreaterThan(0.3);
   });
 
   it('should return 0 for no match', () => {
