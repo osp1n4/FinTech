@@ -1264,6 +1264,169 @@ Scenario: TC-HU-017-04 - Protección de rutas
 
 ---
 
-**Documento actualizado:** Enero 20, 2026    
-**Versión:** 1.1  
-**Módulos agregados:** MÓDULO 6 - Autenticación de Administradores   
+## MÓDULO 7: 💬 CHATBOT DE SOPORTE FAQ (HU-016)
+
+### 🧪 HU-016 – Chatbot de Soporte FAQ para User App
+
+**Como** usuario final de la aplicación  
+**Quiero** acceder a un chatbot de preguntas frecuentes desde la página principal  
+**Para** obtener respuestas inmediatas a mis dudas sin necesidad de contactar soporte humano
+
+**Descripción:**  
+Implementar un chatbot interactivo basado en preguntas frecuentes (FAQ) que aparezca como un botón flotante en la aplicación del usuario. El chatbot debe responder preguntas sobre cuentas, transacciones, seguridad y problemas técnicos mediante coincidencia de palabras clave, sin requerir servicios de IA externos.
+
+**Estimación:** 5 puntos  
+**Prioridad:** Media  
+**Dependencias:** Ninguna
+
+#### Criterios de Aceptación
+
+```gherkin
+Feature: Chatbot de soporte FAQ
+
+  Scenario: Usuario abre el chatbot por primera vez
+    Given que estoy en la página principal (HomePage)
+    And veo un botón flotante con ícono 💬 en esquina inferior derecha
+    When hago clic en el botón del chatbot
+    Then se abre un modal de chat con animación suave
+    And veo el mensaje de bienvenida del bot
+    
+
+  Scenario: Usuario selecciona pregunta de la lista FAQ
+    Given que el chatbot está abierto
+    And veo la lista de preguntas frecuentes
+    When escribo una pregunta
+    Then el mensaje del usuario aparece como burbuja azul
+    And aparece indicador "Bot está escribiendo..." por 600ms
+    And el bot responde con la respuesta predefinida
+    And el mensaje del bot aparece como burbuja gris
+    And el scroll automáticamente baja al último mensaje
+
+  Scenario: Usuario escribe pregunta con coincidencia
+    Given que el chatbot está abierto
+    When escribo "crear cuenta" en el campo de entrada
+    And presiono Enter o hago clic en enviar
+    Then el sistema busca coincidencias por keywords
+    And encuentra la FAQ "¿Cómo creo una cuenta?"
+    And el bot responde con la respuesta correspondiente
+    
+
+  Scenario: Usuario escribe pregunta sin coincidencia
+    Given que el chatbot está abierto
+    When escribo "una pregunta sin coincidencia"
+    And presiono Enter
+    Then el sistema no encuentra coincidencias 
+    And el bot responde con mensaje fallback
+    And el mensaje indica "No encontré una respuesta exacta"
+    And sugiere contactar soporte humano
+
+  Scenario: Usuario cierra el chatbot
+    Given que el chatbot está abierto con mensajes
+    When hago clic en el botón X de cerrar
+    Then el modal se cierra con animación
+    And el botón flotante vuelve a estado "cerrado"
+    And el historial de mensajes se mantiene en memoria
+    And si reabro, los mensajes anteriores siguen ahí
+
+ ```
+
+#### 🧪 TC-HU-016-01 (Positivo - Apertura del chatbot)
+**Descripción:** Validar que el usuario puede abrir y cerrar el chatbot correctamente.
+
+**Datos de Entrada:**
+- Página: `HomePage.tsx`
+- Componente: `ChatButton.tsx`
+- Estado inicial: `isOpen = false`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-01 - Apertura y cierre del chatbot
+  Given que el componente ChatButton está montado
+  And el estado isOpen es false
+  When el usuario hace clic en el botón
+  Then se ejecuta la función openChat()
+  And el estado isOpen cambia a true
+  And se renderiza el componente ChatModal
+  And el modal es visible con animación
+  When el usuario hace clic en cerrar
+  Then se ejecuta closeChat()
+  And el estado isOpen cambia a false
+  And el modal desaparece
+```
+
+**Resultado Esperado:** Modal abre y cierra correctamente, estado sincronizado
+
+**Archivo de Test:** `frontend/user-app/src/components/chatbot/__tests__/ChatButton.test.tsx`
+
+---
+
+
+
+#### 🧪 TC-HU-016-03 (Positivo - Búsqueda por keywords)
+**Descripción:** Validar que el sistema encuentra coincidencias por palabras clave.
+
+**Datos de Entrada:**
+- Texto usuario: `"transaccion rechazada"`
+- Keywords FAQ: `["transacción", "rechazada", "bloqueada", "denied"]`
+- Threshold: `0.15`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-03 - Coincidencia por keywords
+  Given que existen 17 FAQs con keywords definidas
+  When el usuario escribe "transaccion rechazada"
+  Then el sistema normaliza el texto (lowercase, sin acentos)
+  And busca en todas las FAQs
+  And calcula score para cada FAQ
+  And encuentra FAQ con keywords ["transacción", "rechazada"]
+  And el score es 0.67 (2 de 3 palabras coinciden)
+  And el score >= 0.15 (threshold)
+  And devuelve la FAQ "¿Por qué mi transacción fue rechazada?"
+```
+
+**Resultado Esperado:** FAQ correcta encontrada, score >= 0.15
+
+**Archivo de Test:** `frontend/user-app/src/utils/__tests__/faqMatcher.test.ts`
+
+---
+
+
+
+**Resultado Esperado:** Mensaje fallback mostrado correctamente
+
+**Archivo de Test:** `frontend/user-app/src/hooks/__tests__/useChatbot.test.ts::test_sendMessage_with_no_match_shows_fallback`
+
+---
+
+
+#### 🧪 TC-HU-016-06 (Positivo - Persistencia de mensajes)
+**Descripción:** Validar que el historial de mensajes se mantiene al cerrar y reabrir.
+
+**Datos de Entrada:**
+- Mensajes iniciales: `3` (bienvenida + pregunta + respuesta)
+- Acción: cerrar y reabrir modal
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-06 - Persistencia de conversación
+  Given que el usuario tuvo una conversación con 3 mensajes
+  And el estado messages contiene esos 3 mensajes
+  When el usuario cierra el modal (isOpen = false)
+  Then el estado messages NO se resetea
+  And messages sigue conteniendo los 3 mensajes
+  When el usuario reabre el modal (isOpen = true)
+  Then ChatModal renderiza los mensajes existentes
+  And el usuario ve el historial completo
+  And puede continuar la conversación
+```
+
+**Resultado Esperado:** Conversación persiste durante la sesión
+
+**Archivo de Test:** `frontend/user-app/src/hooks/__tests__/useChatbot.test.ts::test_messages_persist_across_open_close`
+
+---
+
+
+**Documento actualizado:** Enero 21, 2026    
+**Versión:** 1.2  
+**Módulos agregados:** MÓDULO 7 - Chatbot de Soporte FAQ
