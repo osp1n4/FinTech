@@ -1,8 +1,5 @@
 /**
  * FAQ Data - Preguntas frecuentes FinTech
- * Fase 2 - Paso 1: Data Layer
- * 
- * Implementación GREEN - Datos de FAQs contextualizadas
  */
 
 import type { FAQItem } from '../types/chatbot.types';
@@ -46,7 +43,7 @@ export const faqData: FAQItem[] = [
     id: 'faq-trans-1',
     category: 'transacciones',
     question: '¿Cómo realizo una transacción?',
-    answer: 'Desde el dashboard, selecciona "Nueva Transacción", ingresa el monto y destino. El sistema evaluará automáticamente el riesgo.',
+    answer: 'Desde la página principal, selecciona "Transferir", ingresa el monto, Ubicación, Tipo de Transacción y Destinatario. El sistema evaluará automáticamente el riesgo.',
     keywords: ['transaccion', 'realizar', 'hacer', 'enviar', 'transferir', 'pago']
   },
   {
@@ -60,14 +57,14 @@ export const faqData: FAQItem[] = [
     id: 'faq-trans-3',
     category: 'transacciones',
     question: '¿Por qué mi transacción fue rechazada?',
-    answer: 'Las transacciones se rechazan si el nivel de riesgo es HIGH_RISK. Puede ser por monto alto, horario inusual o ubicación sospechosa.',
+    answer: 'Las transacciones se rechazan si el nivel de riesgo es ALTO RIESGO. Puede ser por monto alto, horario inusual o ubicación sospechosa.',
     keywords: ['rechazada', 'rechazo', 'porque', 'motivo', 'razon', 'bloqueo']
   },
   {
     id: 'faq-trans-4',
     category: 'transacciones',
     question: '¿Cómo veo mi historial de transacciones?',
-    answer: 'En el dashboard principal encontrarás la lista de tus transacciones recientes con su estado y nivel de riesgo.',
+    answer: 'En la página principal encontrarás la lista de tus transacciones recientes con su estado y nivel de riesgo.',
     keywords: ['historial', 'transacciones', 'ver', 'lista', 'recientes', 'movimientos']
   },
 
@@ -76,14 +73,14 @@ export const faqData: FAQItem[] = [
     id: 'faq-seg-1',
     category: 'seguridad-fraude',
     question: '¿Qué es el nivel de riesgo?',
-    answer: 'Es una evaluación automática: LOW_RISK (segura), MEDIUM_RISK (requiere atención), HIGH_RISK (bloqueada).',
+    answer: 'Es una evaluación automática: BAJO RIESGO (segura), RIESGO MEDIO (requiere atención), ALTO RIESGO (bloqueada).',
     keywords: ['riesgo', 'nivel', 'seguridad', 'evaluacion', 'fraude', 'que']
   },
   {
     id: 'faq-seg-2',
     category: 'seguridad-fraude',
     question: '¿Cómo reporto una transacción sospechosa?',
-    answer: 'Contacta inmediatamente a soporte con el ID de la transacción. Bloquearemos tu cuenta preventivamente.',
+    answer: 'Contacta inmediatamente a soporte 24/7 por email soporte@fintech.com, o al número 3604050 ext 105, con el ID de la transacción a la mano. Bloquearemos tu cuenta preventivamente.',
     keywords: ['reportar', 'sospechosa', 'fraude', 'denuncia', 'alertar', 'reporto']
   },
   {

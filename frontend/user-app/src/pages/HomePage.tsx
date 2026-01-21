@@ -87,7 +87,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const recentTransactions = transactions.length;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <>
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       {/* Saludo personalizado */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -253,18 +254,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </button>
         </Card>
       </motion.div>
-    </div>
+      </div>
     
-    {/* Chatbot de Soporte */}
-    <ChatButton onClick={chatbot.openChat} />
-    <ChatModal
-      isOpen={chatbot.isOpen}
-      onClose={chatbot.closeChat}
-      messages={chatbot.messages}
-      isTyping={chatbot.isTyping}
-      onSendMessage={chatbot.sendMessage}
-      onSelectFAQ={chatbot.selectFAQ}
-    />
-  </div>
+      {/* Chatbot de Soporte */}
+      <ChatButton onClick={chatbot.openChat} />
+      <ChatModal
+        isOpen={chatbot.isOpen}
+        onClose={chatbot.closeChat}
+        messages={chatbot.messages}
+        isTyping={chatbot.isTyping}
+        onSendMessage={chatbot.sendMessage}
+        onSelectFAQ={chatbot.selectFAQ}
+      />
+    </>
   );
 }

@@ -5,9 +5,11 @@
  * Fase 2 - Paso 2: UI Components - FASE GREEN
  */
 
-import type { ChatMessage as ChatMessageType } from '../../types/chatbot.types';
+import type { ChatMessage as ChatMessageType, FAQItem } from '../../types/chatbot.types';
 import ChatMessageComponent from './ChatMessage';
 import ChatInput from './ChatInput';
+import FAQList from './FAQList';
+import { faqData } from '../../data/faqData';
 
 type ChatModalProps = Readonly<{
   isOpen: boolean;
@@ -15,6 +17,7 @@ type ChatModalProps = Readonly<{
   messages: ChatMessageType[];
   onSendMessage: (message: string) => void;
   isTyping?: boolean;
+  onSelectFAQ?: (faq: FAQItem) => void;
 }>;
 
 export default function ChatModal({ 
@@ -22,7 +25,8 @@ export default function ChatModal({
   onClose, 
   messages, 
   onSendMessage, 
-  isTyping = false 
+  isTyping = false,
+  onSelectFAQ
 }: ChatModalProps) {
   if (!isOpen) {
     return null;
@@ -47,17 +51,25 @@ export default function ChatModal({
 
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-        {messages.map((msg) => (
-          <ChatMessageComponent key={msg.id} message={msg} />
-        ))}
-        
-        {/* Typing Indicator */}
-        {isTyping && (
-          <div className="flex justify-start mb-3">
-            <div className="bg-gray-200 rounded-lg px-4 py-2 text-gray-600 text-sm">
-              <span className="animate-pulse">Escribiendo...</span>
-            </div>
-          </div>
+        {messages.length === 0 ? (
+          // Show FAQ list when no messages
+          onSelectFAQ && <FAQList faqs={faqData} onSelect={onSelectFAQ} />
+        ) : (
+          // Show messages when conversation has started
+          <>
+            {messages.map((msg) => (
+              <ChatMessageComponent key={msg.id} message={msg} />
+            ))}
+            
+            {/* Typing Indicator */}
+            {isTyping && (
+              <div className="flex justify-start mb-3">
+                <div className="bg-gray-200 rounded-lg px-4 py-2 text-gray-600 text-sm">
+                  <span className="animate-pulse">Escribiendo...</span>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
