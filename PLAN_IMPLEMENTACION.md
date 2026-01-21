@@ -227,7 +227,7 @@ Crear estructura de datos para preguntas frecuentes contextualizadas al flujo Fi
 #### 📞 Soporte
 | Pregunta | Respuesta |
 |----------|-----------|
-| ¿Cómo contacto a soporte humano? | Escribe "hablar con humano" o envía un email a soporte@fintech.com |
+| ¿Cómo contacto a soporte humano? | Envía un email a soporte@fintech.com |
 | ¿En qué horarios atiende soporte? | Lunes a Viernes de 8:00 AM a 6:00 PM. Emergencias de fraude: 24/7. |
 
 ---
@@ -353,12 +353,12 @@ Integrar chatbot en HomePage y validar funcionamiento completo.
 
 | Métrica | Objetivo | Estado |
 |---------|----------|--------|
-| Cobertura | >70% | ⏳ |
-| Tests Unitarios | 24+ | ⏳ |
+| Cobertura | >70% | ✅ 97% |
+| Tests Unitarios | 24+ | ✅ 32 |
 | Tests E2E | 6+ | ⏳ |
-| FAQs implementadas | 15+ | ⏳ |
+| FAQs implementadas | 15+ | ✅ 17 |
 | Componentes | 5 | ⏳ |
-| SOLID | 0 violaciones | ⏳ |
+| SOLID | 0 violaciones | ✅ |
 
 ---
 
@@ -452,12 +452,12 @@ git push
 
 ## 📋 Checklist de Implementación
 
-### Paso 1 - Data Layer
-- [ ] Crear `chatbot.types.ts` con interfaces
-- [ ] Crear `faqData.ts` con 15+ FAQs
-- [ ] Crear `faqMatcher.ts` con lógica
-- [ ] 8 tests unitarios passing
-- [ ] Cobertura >70%
+### Paso 1 - Data Layer ✅ COMPLETADO
+- [x] Crear `chatbot.types.ts` con interfaces
+- [x] Crear `faqData.ts` con 17 FAQs
+- [x] Crear `faqMatcher.ts` con lógica
+- [x] 32 tests unitarios passing
+- [x] Cobertura 97%
 
 ### Paso 2 - UI Components
 - [ ] `ChatButton.tsx` implementado
