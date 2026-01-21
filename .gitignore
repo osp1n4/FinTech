@@ -55,3 +55,19 @@ poetry.lock
 
 # Deprecated folders (moved to fraud-evaluation-service)
 services/shared/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+.next/
