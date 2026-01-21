@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import type { ChatMessage, FAQItem } from '../types/chatbot.types';
-import { WELCOME_MESSAGE, FALLBACK_MESSAGE } from '../data/faqData';
+import { WELCOME_MESSAGE, FALLBACK_MESSAGE, faqData } from '../data/faqData';
 import { findBestMatch } from '../utils/faqMatcher';
 
 let messageIdCounter = 0;
@@ -53,9 +53,9 @@ export function useChatbot() {
     await new Promise(resolve => setTimeout(resolve, 600));
 
     // Find best matching FAQ
-    const matchResult = findBestMatch(text);
-    const botResponse = matchResult.match
-      ? matchResult.match.answer
+    const matchResult = findBestMatch(text, faqData);
+    const botResponse = matchResult.found && matchResult.faq
+      ? matchResult.faq.answer
       : FALLBACK_MESSAGE;
 
     // Add bot response

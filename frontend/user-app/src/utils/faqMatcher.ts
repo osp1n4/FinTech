@@ -8,7 +8,7 @@
 import type { FAQItem, FAQMatchResult } from '../types/chatbot.types';
 
 /** Umbral mínimo para considerar una coincidencia válida */
-const MATCH_THRESHOLD = 0.2;
+const MATCH_THRESHOLD = 0.15;
 
 /**
  * Normaliza texto para comparación (minúsculas, sin acentos)
