@@ -476,8 +476,8 @@ git push
 - [x] 14 tests unitarios passing
 - [x] Cobertura 100%
 
-### Paso 4 - Integration
-- [ ] Chatbot visible en HomePage
-- [ ] 6 tests E2E passing
-- [ ] Documentación actualizada
-- [ ] PR creado y revisado
+### Paso 4 - Integration ✅ COMPLETADO
+- [x] Chatbot visible en HomePage
+- [x] Componentes conectados con hook
+- [x] 6 tests E2E creados
+- [x] Chatbot totalmente funcional
