@@ -15,12 +15,12 @@ from unittest.mock import Mock, AsyncMock, patch
 import sys
 from pathlib import Path
 
-# Agregar el directorio services al path
-services_path = Path(__file__).parent.parent.parent / "services" / "fraud-evaluation-service" / "src"
+# Agregar el directorio services al path (sin /src para que las importaciones con src. funcionen)
+services_path = Path(__file__).parent.parent.parent / "services" / "fraud-evaluation-service"
 sys.path.insert(0, str(services_path))
 
-from domain.models import Admin
-from application.admin_auth_use_cases import (
+from src.domain.models import Admin
+from src.application.admin_auth_use_cases import (
     RegisterAdminUseCase,
     LoginAdminUseCase,
     VerifyAdminEmailUseCase
@@ -41,9 +41,9 @@ class TestRegisterAdminUseCase:
         """
         # Mocks
         mock_repo = Mock()
-        mock_repo.admin_exists = AsyncMock(return_value=False)
-        mock_repo.email_exists = AsyncMock(return_value=False)
-        mock_repo.save_admin = AsyncMock()
+        mock_repo.admin_exists = Mock(return_value=False)
+        mock_repo.email_exists = Mock(return_value=False)
+        mock_repo.save_admin = Mock()
         
         mock_password_service = Mock()
         mock_password_service.hash_password = Mock(return_value="$2b$12$hashed")
@@ -90,7 +90,7 @@ class TestRegisterAdminUseCase:
         Then: Lanza ValueError("Admin ID already exists")
         """
         mock_repo = Mock()
-        mock_repo.admin_exists = AsyncMock(return_value=True)
+        mock_repo.admin_exists = Mock(return_value=True)
         
         use_case = RegisterAdminUseCase(
             admin_repository=mock_repo,
@@ -117,8 +117,8 @@ class TestRegisterAdminUseCase:
         Then: Lanza ValueError("Email already registered")
         """
         mock_repo = Mock()
-        mock_repo.admin_exists = AsyncMock(return_value=False)
-        mock_repo.email_exists = AsyncMock(return_value=True)
+        mock_repo.admin_exists = Mock(return_value=False)
+        mock_repo.email_exists = Mock(return_value=True)
         
         use_case = RegisterAdminUseCase(
             admin_repository=mock_repo,
@@ -145,9 +145,9 @@ class TestRegisterAdminUseCase:
         Then: Se llama a hash_password y se guarda el hash
         """
         mock_repo = Mock()
-        mock_repo.admin_exists = AsyncMock(return_value=False)
-        mock_repo.email_exists = AsyncMock(return_value=False)
-        mock_repo.save_admin = AsyncMock()
+        mock_repo.admin_exists = Mock(return_value=False)
+        mock_repo.email_exists = Mock(return_value=False)
+        mock_repo.save_admin = Mock()
         
         mock_password_service = Mock()
         mock_password_service.hash_password = Mock(return_value="$2b$12$hashed_password")
@@ -202,8 +202,8 @@ class TestLoginAdminUseCase:
         
         # Mocks
         mock_repo = Mock()
-        mock_repo.find_by_admin_id = AsyncMock(return_value=admin)
-        mock_repo.update_last_login = AsyncMock()
+        mock_repo.find_by_admin_id = Mock(return_value=admin)
+        mock_repo.update_last_login = Mock()
         
         mock_password_service = Mock()
         mock_password_service.verify_password = Mock(return_value=True)
@@ -248,7 +248,7 @@ class TestLoginAdminUseCase:
         Then: Lanza ValueError("Invalid credentials")
         """
         mock_repo = Mock()
-        mock_repo.find_by_admin_id = AsyncMock(return_value=None)
+        mock_repo.find_by_admin_id = Mock(return_value=None)
         
         use_case = LoginAdminUseCase(
             admin_repository=mock_repo,
@@ -279,7 +279,7 @@ class TestLoginAdminUseCase:
         )
         
         mock_repo = Mock()
-        mock_repo.find_by_admin_id = AsyncMock(return_value=admin)
+        mock_repo.find_by_admin_id = Mock(return_value=admin)
         
         mock_password_service = Mock()
         mock_password_service.verify_password = Mock(return_value=False)
@@ -314,7 +314,7 @@ class TestLoginAdminUseCase:
         )
         
         mock_repo = Mock()
-        mock_repo.find_by_admin_id = AsyncMock(return_value=admin)
+        mock_repo.find_by_admin_id = Mock(return_value=admin)
         
         mock_password_service = Mock()
         mock_password_service.verify_password = Mock(return_value=True)
@@ -350,7 +350,7 @@ class TestLoginAdminUseCase:
         )
         
         mock_repo = Mock()
-        mock_repo.find_by_admin_id = AsyncMock(return_value=admin)
+        mock_repo.find_by_admin_id = Mock(return_value=admin)
         
         mock_password_service = Mock()
         mock_password_service.verify_password = Mock(return_value=True)
@@ -391,8 +391,8 @@ class TestVerifyAdminEmailUseCase:
         )
         
         mock_repo = Mock()
-        mock_repo.find_by_verification_token = AsyncMock(return_value=admin)
-        mock_repo.update_admin = AsyncMock()
+        mock_repo.find_by_verification_token = Mock(return_value=admin)
+        mock_repo.update_admin = Mock()
         
         mock_email_service = Mock()
         mock_email_service.send_welcome_email = AsyncMock()
@@ -428,7 +428,7 @@ class TestVerifyAdminEmailUseCase:
         Then: Lanza ValueError("Invalid verification token")
         """
         mock_repo = Mock()
-        mock_repo.find_by_verification_token = AsyncMock(return_value=None)
+        mock_repo.find_by_verification_token = Mock(return_value=None)
         
         use_case = VerifyAdminEmailUseCase(
             admin_repository=mock_repo,
@@ -458,7 +458,7 @@ class TestVerifyAdminEmailUseCase:
         )
         
         mock_repo = Mock()
-        mock_repo.find_by_verification_token = AsyncMock(return_value=admin)
+        mock_repo.find_by_verification_token = Mock(return_value=admin)
         
         use_case = VerifyAdminEmailUseCase(
             admin_repository=mock_repo,
@@ -488,8 +488,8 @@ class TestVerifyAdminEmailUseCase:
         )
         
         mock_repo = Mock()
-        mock_repo.find_by_verification_token = AsyncMock(return_value=admin)
-        mock_repo.update_admin = AsyncMock()
+        mock_repo.find_by_verification_token = Mock(return_value=admin)
+        mock_repo.update_admin = Mock()
         
         mock_email_service = Mock()
         mock_email_service.send_welcome_email = AsyncMock()
@@ -524,8 +524,8 @@ class TestVerifyAdminEmailUseCase:
         )
         
         mock_repo = Mock()
-        mock_repo.find_by_verification_token = AsyncMock(return_value=admin)
-        mock_repo.update_admin = AsyncMock()
+        mock_repo.find_by_verification_token = Mock(return_value=admin)
+        mock_repo.update_admin = Mock()
         
         mock_email_service = Mock()
         mock_email_service.send_welcome_email = AsyncMock()
@@ -540,5 +540,5 @@ class TestVerifyAdminEmailUseCase:
         # Verificar que se envió el email de bienvenida
         mock_email_service.send_welcome_email.assert_called_once_with(
             to_email="john@admin.com",
-            admin_name="John Admin"
+            user_name="John Admin"
         )
