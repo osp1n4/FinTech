@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fraud Detection Engine - FinTech Bank Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Outfit:wght@500;600;700&amp;family=Material+Icons+Outlined&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#5850EC", // Purple from the reference image
+              "brand-teal": "#14B8A6",
+              "background-light": "#F9FAFB",
+              "background-dark": "#0F172A",
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              display: ["Outfit", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              "xl": "1rem",
+            },
+          },
+        },
+      };
+    </script>
+<style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .data-stream {
+            background: linear-gradient(to bottom, transparent, #14B8A6, transparent);
+            width: 1px;
+            height: 100px;
+            position: absolute;
+            animation: stream 3s linear infinite;
+        }
+        @keyframes stream {
+            0% { transform: translateY(-100px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(500px); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+<div class="flex flex-col md:flex-row min-h-screen">
+<div class="hidden md:flex w-1/2 bg-[#020617] relative overflow-hidden items-center justify-center">
+<div class="absolute inset-0 z-0">
+<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-teal/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px]"></div>
+</div>
+<div class="data-stream" style="left: 20%; animation-delay: 0s;"></div>
+<div class="data-stream" style="left: 40%; animation-delay: 1s;"></div>
+<div class="data-stream" style="left: 60%; animation-delay: 2s;"></div>
+<div class="data-stream" style="left: 80%; animation-delay: 0.5s;"></div>
+<div class="relative z-10 p-12 w-full max-w-lg">
+<div class="mb-12">
+<div class="flex items-center space-x-2 mb-4">
+<span class="inline-block px-3 py-1 bg-brand-teal/20 text-brand-teal text-xs font-bold tracking-widest uppercase rounded-full border border-brand-teal/30">
+                            Neural Shield V2.0
+                        </span>
+</div>
+<h1 class="font-display text-4xl lg:text-5xl font-bold text-white leading-tight mb-6">
+                        Protecting your assets with <span class="text-brand-teal">Intelligent Engine</span>
+</h1>
+<p class="text-slate-400 text-lg leading-relaxed">
+                        Real-time risk evaluation and fraud prevention powered by advanced neural networks. Secure your transactions effortlessly.
+                    </p>
+</div>
+<div class="glass-effect rounded-xl p-6 relative">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 bg-brand-teal/20 rounded-lg flex items-center justify-center">
+<span class="material-icons-outlined text-brand-teal">security</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Active Monitoring</p>
+<p class="text-white font-medium">99.9% Protection Rate</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-brand-teal text-sm font-bold flex items-center">
+<span class="material-icons-outlined text-sm mr-1">bolt</span>
+                                Live
+                            </p>
+</div>
+</div>
+<div class="flex items-end space-x-2 h-24">
+<div class="bg-brand-teal/40 w-full h-[40%] rounded-t-sm"></div>
+<div class="bg-brand-teal/60 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-brand-teal/30 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-brand-teal w-full h-[90%] rounded-t-sm"></div>
+<div class="bg-brand-teal/50 w-full h-[60%] rounded-t-sm"></div>
+<div class="bg-brand-teal/80 w-full h-[85%] rounded-t-sm"></div>
+<div class="bg-primary/60 w-full h-[45%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full md:w-1/2 flex flex-col justify-center items-center px-6 py-12 bg-white dark:bg-[#0f172a]">
+<div class="w-full max-w-md">
+<div class="flex flex-col items-center mb-10">
+<div class="flex items-center gap-3 mb-2">
+<div class="relative w-10 h-8">
+<div class="absolute inset-0 bg-brand-teal skew-x-[-20deg] rounded-sm"></div>
+<div class="absolute inset-0 left-3 bg-brand-teal/40 skew-x-[-20deg] rounded-sm"></div>
+</div>
+<h2 class="font-display text-2xl font-bold text-slate-900 dark:text-white">FinTech Bank</h2>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase font-medium mb-8">Digital Finance Partner</p>
+<h3 class="text-lg text-slate-600 dark:text-slate-300 font-medium">Inicia sesión en tu cuenta</h3>
+</div>
+<div class="bg-white dark:bg-[#1e293b] p-8 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+<form action="#" class="space-y-6">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" for="username">Usuario</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-icons-outlined text-slate-400 text-xl">person_outline</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none dark:text-white placeholder:text-slate-400" id="username" name="username" placeholder="tu_usuario" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" for="password">Contraseña</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-icons-outlined text-slate-400 text-xl">lock_open</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none dark:text-white placeholder:text-slate-400" id="password" name="password" placeholder="••••••••" type="password"/>
+</div>
+</div>
+<div class="flex items-center justify-between text-sm">
+<label class="flex items-center text-slate-600 dark:text-slate-400 cursor-pointer">
+<input class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary mr-2" type="checkbox"/>
+                                Recuérdame
+                            </label>
+<a class="text-primary hover:underline font-medium" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+<button class="w-full bg-primary hover:bg-indigo-700 text-white py-3.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-lg shadow-primary/30" type="submit">
+                            Iniciar Sesión
+                            <span class="material-icons-outlined text-lg">arrow_forward</span>
+</button>
+</form>
+<div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
+<p class="text-slate-600 dark:text-slate-400">
+                            ¿No tienes cuenta? 
+                            <a class="text-primary hover:underline font-bold ml-1" href="#">Regístrate aquí</a>
+</p>
+</div>
+</div>
+<p class="mt-12 text-center text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest font-medium">
+                    © 2024 Fraud Detection Engine. Secure Systems.
+                </p>
+</div>
+<button class="fixed bottom-6 right-6 p-3 bg-white dark:bg-slate-800 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 transition-all hover:scale-110" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-icons-outlined block dark:hidden text-slate-700">dark_mode</span>
+<span class="material-icons-outlined hidden dark:block text-amber-400">light_mode</span>
+</button>
+</div>
+</div>
+
+</body></html>

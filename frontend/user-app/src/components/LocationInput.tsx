@@ -60,7 +60,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
         Ubicacion
       </label>
 
@@ -75,13 +75,14 @@ export const LocationInput: React.FC<LocationInputProps> = ({
             disabled={disabled || isGettingLocation}
             className={`
               w-full px-4 py-3 rounded-lg border transition-colors
-              ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-user-primary'}
-              ${disabled || isGettingLocation ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+              ${error ? 'border-red-500 focus:ring-red-500 dark:border-red-800 dark:focus:ring-red-500' : 'border-gray-300 focus:ring-user-primary dark:border-slate-700 dark:focus:ring-indigo-500'}
+              ${disabled || isGettingLocation ? 'bg-gray-100 dark:bg-slate-800 cursor-not-allowed' : 'bg-white dark:bg-slate-900'}
               focus:outline-none focus:ring-2
+              text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500
             `}
           />
           {error && (
-            <p className="mt-1 text-sm text-red-600">{error}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
         </div>
 
@@ -93,8 +94,8 @@ export const LocationInput: React.FC<LocationInputProps> = ({
           className={`
             px-4 py-3 rounded-lg font-medium transition-colors flex items-center gap-2
             ${isGettingLocation
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-user-primary hover:bg-indigo-700 text-white'
+              ? 'bg-gray-400 dark:bg-slate-600 cursor-not-allowed'
+              : 'bg-user-primary hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white'
             }
           `}
           title="Usar mi ubicación actual"
@@ -114,22 +115,22 @@ export const LocationInput: React.FC<LocationInputProps> = ({
       </div>
 
       {/* Información sobre el formato */}
-      <div className="flex items-start gap-2 text-xs text-gray-600">
+      <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-slate-400">
         <div className="flex-1 space-y-1">
           {isCoordinates ? (
-            <div className="flex items-center gap-1 text-green-600">
+            <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
               <span>✓</span>
               <span>Coordenadas validas: Lat {value.split(',')[0]}, Lon {value.split(',')[1]}</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1 text-blue-600">
+            <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
               <span>ℹ️</span>
               <span>Formato: latitud,longitud (ej: 4.6097,-74.0817)</span>
             </div>
           )}
           
           {locationMethod === 'gps' && isCoordinates && (
-            <div className="flex items-center gap-1 text-indigo-600">
+            <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
               <span>📍</span>
               <span>Ubicacion detectada automaticamente</span>
             </div>
@@ -139,35 +140,35 @@ export const LocationInput: React.FC<LocationInputProps> = ({
 
       {/* Ejemplos de ciudades comunes */}
       {!isCoordinates && (
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 dark:text-slate-400">
           <details className="cursor-pointer">
-            <summary className="hover:text-gray-700">Ver ejemplos de coordenadas</summary>
+            <summary className="hover:text-gray-700 dark:hover:text-slate-300">Ver ejemplos de coordenadas</summary>
             <div className="mt-2 space-y-1 pl-3">
               <button
                 type="button"
                 onClick={() => onChange('4.6097,-74.0817')}
-                className="block hover:text-indigo-600"
+                className="block hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 📍 Bogotá: 4.6097,-74.0817
               </button>
               <button
                 type="button"
                 onClick={() => onChange('6.2442,-75.5812')}
-                className="block hover:text-indigo-600"
+                className="block hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 📍 Medellín: 6.2442,-75.5812
               </button>
               <button
                 type="button"
                 onClick={() => onChange('3.4516,-76.5320')}
-                className="block hover:text-indigo-600"
+                className="block hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 📍 Cali: 3.4516,-76.5320
               </button>
               <button
                 type="button"
                 onClick={() => onChange('40.7128,-74.0060')}
-                className="block hover:text-indigo-600"
+                className="block hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 📍 New York: 40.7128,-74.0060
               </button>

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Card } from '../components/ui/Card';
 import { CreditCard, DollarSign, Activity } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import { useTheme } from '../context/ThemeContext';
 import { getUserTransactions } from '../services/api';
 import { useState, useEffect } from 'react';
 import { ChatButton, ChatModal } from '../components/chatbot';
@@ -25,6 +26,7 @@ interface Transaction {
 
 export function HomePage({ onNavigate }: HomePageProps) {
   const { userId } = useUser();
+  const { darkMode } = useTheme();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -87,17 +89,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const recentTransactions = transactions.length;
 
   return (
-    <>
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      {/* Saludo personalizado */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h2 className="text-3xl font-bold text-gray-900">¡Hola de nuevo! 👋</h2>
-        <p className="text-gray-600 mt-1">Aquí está un resumen de tu cuenta</p>
-      </motion.div>
+    <div className={darkMode ? 'dark' : ''}>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 transition-colors">
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          {/* Saludo personalizado */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">¡Hola de nuevo! 👋</h2>
+            <p className="text-gray-600 dark:text-slate-400 mt-1">Aquí está un resumen de tu cuenta</p>
+          </motion.div>
 
       {/* Tarjeta de saldo única */}
       <div className="max-w-2xl mx-auto">
@@ -135,49 +138,49 @@ export function HomePage({ onNavigate }: HomePageProps) {
       >
         <button
           onClick={() => onNavigate('new-transaction')}
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 text-left group"
+          className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-slate-700 text-left group"
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900 group-hover:text-user-primary transition-colors">
+              <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-user-primary dark:group-hover:text-indigo-400 transition-colors">
                 Transferir Dinero
               </h4>
-              <p className="text-sm text-gray-600 mt-1">Envía dinero de forma segura</p>
+              <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">Envía dinero de forma segura</p>
             </div>
-            <div className="bg-user-primary/10 p-3 rounded-full group-hover:bg-user-primary group-hover:text-white transition-colors">
-              <DollarSign className="w-5 h-5 text-user-primary group-hover:text-white" />
+            <div className="bg-user-primary/10 dark:bg-indigo-900/30 p-3 rounded-full group-hover:bg-user-primary dark:group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+              <DollarSign className="w-5 h-5 text-user-primary dark:text-indigo-400 group-hover:text-white" />
             </div>
           </div>
         </button>
 
         <button
           onClick={() => onNavigate('my-transactions')}
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 text-left group"
+          className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-slate-700 text-left group"
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900 group-hover:text-user-primary transition-colors">
+              <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
                 Ver Movimientos
               </h4>
-              <p className="text-sm text-gray-600 mt-1">{recentTransactions} transacciones este mes</p>
+              <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">{recentTransactions} transacciones este mes</p>
             </div>
-            <div className="bg-emerald-100 p-3 rounded-full group-hover:bg-emerald-500 transition-colors">
-              <Activity className="w-5 h-5 text-emerald-600 group-hover:text-white" />
+            <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-full group-hover:bg-emerald-500 dark:group-hover:bg-emerald-600 transition-colors">
+              <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />
             </div>
           </div>
         </button>
 
-        <Card className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+        <button className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-slate-700 text-left">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900">Protección Activa</h4>
-              <p className="text-sm text-gray-600 mt-1">Sistema antifraude monitoreando</p>
+              <h4 className="font-semibold text-gray-900 dark:text-white">Protección Activa</h4>
+              <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">Sistema antifraude monitoreando</p>
             </div>
             <div className="bg-green-500 p-3 rounded-full">
               <span className="text-white text-xs font-bold">✓</span>
             </div>
           </div>
-        </Card>
+        </button>
       </motion.div>
 
       {/* Resumen de actividad */}
@@ -186,14 +189,14 @@ export function HomePage({ onNavigate }: HomePageProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <Card className="p-6">
+        <Card className="p-6 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Actividad Reciente</h3>
-            {loading && <span className="text-xs text-gray-500">Cargando...</span>}
+            <h3 className="font-semibold text-gray-900 dark:text-white">Actividad Reciente</h3>
+            {loading && <span className="text-xs text-gray-500 dark:text-slate-400">Cargando...</span>}
           </div>
           <div className="space-y-3">
               {transactions.length === 0 && !loading ? (
-              <p className="text-center text-gray-500 py-8">No hay transacciones recientes</p>
+              <p className="text-center text-gray-500 dark:text-slate-400 py-8">No hay transacciones recientes</p>
             ) : (
               transactions.map((tx, i) => {
                 // Formatear la fecha recibida desde el servidor (se envía en UTC)
@@ -218,23 +221,23 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 
                 // Determinar etiqueta de estado
                 const statusLabel = tx.status === 'APPROVED' ? 'Aprobada' : tx.status === 'REJECTED' ? 'Rechazada' : tx.status === 'SUSPICIOUS' ? 'Sospechosa' : tx.status;
-                const statusClass = tx.status === 'APPROVED' ? 'bg-green-100 text-green-700' : tx.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700';
+                const statusClass = tx.status === 'APPROVED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : tx.status === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
 
                 return (
-                  <div key={tx.id || tx.transactionId || i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                  <div key={tx.id || tx.transactionId || i} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-slate-700 last:border-0">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        amount > 0 ? 'bg-green-100' : 'bg-gray-100'
+                        amount > 0 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-slate-700'
                       }`}>
-                        <DollarSign className={`w-5 h-5 ${amount > 0 ? 'text-green-600' : 'text-gray-600'}`} />
+                        <DollarSign className={`w-5 h-5 ${amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-slate-400'}`} />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{displayDesc}</p>
-                        <p className="text-xs text-gray-500">{displayDate}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{displayDesc}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{displayDate}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-semibold ${amount > 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                      <p className={`font-semibold ${amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
                         {amount > 0 ? '+' : ''}${Math.abs(amount).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
                       </p>
                       <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${statusClass}`}>
@@ -248,7 +251,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </div>
           <button
             onClick={() => onNavigate('my-transactions')}
-            className="w-full mt-4 py-2 text-user-primary hover:bg-gray-50 rounded-lg transition-colors font-medium"
+            className="w-full mt-4 py-2 text-user-primary dark:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium"
           >
             Ver todas las transacciones →
           </button>
@@ -266,6 +269,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
         onSendMessage={chatbot.sendMessage}
         onSelectFAQ={chatbot.selectFAQ}
       />
-    </>
+      </div>
+    </div>
   );
 }
