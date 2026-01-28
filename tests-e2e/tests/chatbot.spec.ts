@@ -132,7 +132,7 @@ test.describe('Chatbot de Soporte FAQ', () => {
     await page.waitForTimeout(100);
     
     // El indicador debería estar visible brevemente
-    const typingIndicator = page.getByText(/escribiendo|typing|\.\.\./i);
+    page.getByText(/escribiendo|typing|\.\.\./i);
     
     // Verificar que eventualmente aparece la respuesta
     await page.waitForTimeout(700);

@@ -78,7 +78,7 @@ def configure_admin_auth_dependencies(
     _get_current_admin_use_case_factory = get_current_admin_use_case_factory
 
 
-async def get_current_admin_from_token(authorization: Optional[str] = Header(None)) -> str:
+def get_current_admin_from_token(authorization: Optional[str] = Header(None)) -> str:
     """
     Dependency para obtener el admin actual del token JWT
     

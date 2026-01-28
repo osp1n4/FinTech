@@ -21,8 +21,8 @@ export function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Elimina acentos
-    .replace(/[¿?¡!]/g, '') // Elimina signos de puntuación especiales
+     .replaceAll(/[\u0300-\u036f]/g, '') // Elimina acentos
+     .replaceAll(/[¿?¡!]/g, '') // Elimina signos de puntuación especiales
     .trim();
 }
 
