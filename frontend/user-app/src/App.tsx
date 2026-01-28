@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell } from 'lucide-react';
+import { Bell, Moon, Sun } from 'lucide-react';
 import { Card } from './components/ui/Card';
 import { TransactionForm } from './components/TransactionForm';
 import { ResultDisplay } from './components/ResultDisplay';
@@ -11,6 +11,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { validateTransaction, getUserTransactions } from './services/api';
 import { useUser } from './context/UserContext';
+import { useTheme } from './context/ThemeContext';
 import type { TransactionRequest, TransactionResponse, TransactionStatus } from './types/transaction';
 
 type Page = 'home' | 'new-transaction' | 'my-transactions';
@@ -39,6 +40,7 @@ const getTransactionTypeLabel = (type: string | undefined): string => {
 
 function App() {
   const { userId, isAuthenticated, login, logout } = useUser();
+  const { darkMode, toggleDarkMode } = useTheme();
   const [authView, setAuthView] = useState<AuthView>('login');
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -330,7 +332,7 @@ function App() {
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <img src="assets/logo-full.svg" alt="FinTech Bank" className="h-24" />
-          <button className="ml-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-full text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-200">
+          <button className="ml-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-full text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-200 transition-colors">
             {userId}
           </button>
         </div>
@@ -351,19 +353,19 @@ function App() {
             
             {/* Dropdown de notificaciones */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                <div className="p-4 border-b border-gray-200">
-                  <h3 className="font-semibold text-gray-900">Notificaciones</h3>
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 z-50">
+                <div className="p-4 border-b border-gray-200 dark:border-slate-700">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Notificaciones</h3>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">
+                    <div className="p-8 text-center text-gray-500 dark:text-slate-400">
                       <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
                       <p className="text-sm">No tienes notificaciones</p>
                     </div>
                   ) : (
                     notifications.map((notification) => (
-                      <div key={notification.id} className={`p-4 border-b border-gray-100 last:border-b-0 ${notification.read ? 'bg-gray-50' : ''}`}>
+                      <div key={notification.id} className={`p-4 border-b border-gray-100 dark:border-slate-700 last:border-b-0 ${notification.read ? 'bg-gray-50 dark:bg-slate-700/50' : 'dark:bg-slate-800'}`}>
                         <div className="flex items-start gap-3">
                           <div className={`w-2 h-2 rounded-full mt-2 ${
                             notification.type === 'success' ? 'bg-green-500' :
@@ -373,12 +375,12 @@ function App() {
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                                <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                                <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{notification.title}</p>
+                                <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">{notification.message}</p>
+                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{notification.time}</p>
                               </div>
                               <div className="ml-4 flex-shrink-0">
-                                <button onClick={() => removeNotification(notification.id)} className="text-xs text-gray-400 hover:text-red-500">Eliminar</button>
+                                <button onClick={() => removeNotification(notification.id)} className="text-xs text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400">Eliminar</button>
                               </div>
                             </div>
                           </div>
@@ -387,12 +389,12 @@ function App() {
                     ))
                   )}
                 </div>
-                <div className="p-3 border-t border-gray-200 text-center">
+                <div className="p-3 border-t border-gray-200 dark:border-slate-700 text-center">
                   <div className="flex items-center justify-between">
-                    <button onClick={markAllRead} className="text-sm text-gray-600 hover:text-gray-800 font-medium">Marcar todas leídas</button>
+                    <button onClick={markAllRead} className="text-sm text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 font-medium">Marcar todas leídas</button>
                     <button 
                       onClick={() => setShowNotifications(false)}
-                      className="text-sm text-user-primary hover:text-indigo-700 font-medium"
+                      className="text-sm text-user-primary dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
                     >
                       Cerrar
                     </button>
@@ -433,6 +435,13 @@ function App() {
               Movimientos
             </button>
             <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg text-gray-600 hover:text-user-primary hover:bg-gray-50 transition-colors"
+              title={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
               onClick={() => logout()}
               className="px-4 py-2 rounded-lg font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
             >
@@ -468,7 +477,7 @@ function App() {
 
   const renderTransactionPage = (): JSX.Element => {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800">
         <NavBar />
         
         <div className="py-12 px-4 sm:px-6 lg:px-8">
@@ -479,10 +488,10 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center mb-8"
             >
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Nueva Transferencia
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-slate-400">
                 Completa los datos para realizar una transacción segura
               </p>
             </motion.div>
@@ -497,7 +506,7 @@ function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-8 text-center text-sm text-gray-500"
+              className="mt-8 text-center text-sm text-gray-500 dark:text-slate-400"
             >
               Powered by FinTech Bank v1.0
             </motion.div>
@@ -517,8 +526,8 @@ function App() {
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.2 }}
         >
-          <Card>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          <Card className="dark:bg-slate-800 dark:border-slate-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
               Realizar una Transferencia
             </h2>
             <TransactionForm onSubmit={handleSubmit} isLoading={status === 'loading'} />
@@ -554,13 +563,13 @@ function App() {
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.2 }}
         >
-          <Card>
+          <Card className="dark:bg-slate-800 dark:border-slate-700">
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 mx-auto rounded-full bg-red-100 flex items-center justify-center">
-                <span className="text-4xl text-red-600">⚠</span>
+              <div className="w-20 h-20 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <span className="text-4xl text-red-600 dark:text-red-400">⚠</span>
               </div>
-              <h2 className="text-xl font-bold text-red-700">Error</h2>
-              <p className="text-gray-600">{error}</p>
+              <h2 className="text-xl font-bold text-red-700 dark:text-red-400">Error</h2>
+              <p className="text-gray-600 dark:text-slate-400">{error}</p>
               <button
                 onClick={handleNewTransaction}
                 className="w-full py-3 bg-user-primary text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -576,7 +585,11 @@ function App() {
     return null;
   };
 
-  return renderPage();
+  return (
+    <div className={darkMode ? 'dark' : ''}>
+      {renderPage()}
+    </div>
+  );
 }
 
 export default App;

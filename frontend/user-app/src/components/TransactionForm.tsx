@@ -140,14 +140,14 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       />
 
       <div>
-        <label htmlFor="transaction-type-select" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="transaction-type-select" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
           Tipo de Transacción
         </label>
         <select
           id="transaction-type-select"
           value={formData.transactionType}
           onChange={(e) => setFormData(prev => ({ ...prev, transactionType: e.target.value as any }))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-user-primary focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-user-primary dark:focus:ring-indigo-500 focus:border-transparent dark:bg-slate-900 dark:text-white"
           disabled={isLoading}
         >
           <option value="transfer">Transferencia a otra persona</option>

@@ -18,8 +18,8 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'w-full h-14 rounded-lg font-semibold text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantStyles = {
-    primary: 'bg-user-primary text-white hover:bg-indigo-700 focus:ring-user-primary',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400',
+    primary: 'bg-user-primary text-white hover:bg-indigo-700 focus:ring-user-primary dark:bg-indigo-600 dark:hover:bg-indigo-700',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600',
   };
 
   return (
