@@ -841,5 +841,591 @@ Scenario: TC-HU-014-01 - Métricas generales
 
 ---
 
-**Documento creado:** Enero 07, 2026    
-**Versión:** 1.0   
+## MÓDULO 6: 🔐 AUTENTICACIÓN DE ADMINISTRADORES (HU-015 a HU-017)
+
+### 🧪 HU-015 – Registro y Verificación de Administradores
+
+**Como** administrador del sistema  
+**Quiero** registrarme con mis credenciales y verificar mi email  
+**Para** acceder al Admin Dashboard de forma segura
+
+**Descripción:**  
+Implementar flujo completo de registro de administradores con validación de email mediante código de 6 dígitos. El sistema debe crear una entidad Admin separada de User, almacenarla en MongoDB (colección `admins`) y enviar email de verificación.
+
+**Estimación:** 5 puntos  
+**Prioridad:** Alta  
+**Dependencias:** Ninguna
+
+#### Criterios de Aceptación
+
+```gherkin
+Feature: Registro y verificación de administradores
+
+  Scenario: Registro exitoso de administrador
+    Given que el API está disponible en "http://localhost:8000"
+    When envío POST a "/api/v1/admin/auth/register" con:
+      | admin_id    | email              | password  | full_name       |
+      | admin_john  | john@fintech.com   | Pass123!  | John Doe        |
+    Then recibo respuesta 201 Created
+    And el response contiene "admin_id": "admin_john"
+    And se genera token de verificación de 6 dígitos
+    And se envía email con código de verificación
+    And el admin queda con "is_verified": false
+
+  Scenario: Rechazo por admin_id duplicado
+    Given que existe admin con admin_id "admin_john"
+    When intento registrar con el mismo admin_id
+    Then recibo respuesta 400 Bad Request
+    And el mensaje indica "admin_id already exists"
+
+  Scenario: Verificación exitosa de email
+    Given que registré admin con token "123456"
+    When envío POST a "/api/v1/admin/auth/verify-email" con:
+      | token   |
+      | 123456  |
+    Then recibo respuesta 200 OK
+    And el admin queda con "is_verified": true
+    And se limpia el verification_token
+    And se envía email de bienvenida
+
+  Scenario: Rechazo por token expirado
+    Given que el token fue generado hace 25 horas (límite 24h)
+    When intento verificar con el token
+    Then recibo respuesta 400 Bad Request
+    And el mensaje indica "token expired"
+```
+
+#### 🧪 TC-HU-015-01 (Positivo - Registro exitoso)
+**Descripción:** Validar registro completo de administrador.
+
+**Datos de Entrada:**
+- admin_id: `ospina8820`
+- email: `ospina@yopmail.com`
+- password: `Admin123!`
+- full_name: `Antonio Infon0`
+- Endpoint: `POST /api/v1/admin/auth/register`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-015-01 - Registro de administrador
+  Given que tengo datos válidos de admin
+  And el admin_id no existe en la base de datos
+  When envío la solicitud de registro
+  Then el sistema responde con 201 Created
+  And genera un admin_id único
+  And hashea la contraseña con bcrypt
+  And crea token de 6 dígitos válido por 24h
+  And almacena en colección "admins" de MongoDB
+  And envía email de verificación
+```
+
+**Resultado Esperado:** HTTP 201, admin creado, email enviado
+
+**Archivo de Test:** `tests/unit/test_admin_auth_use_cases.py::TestRegisterAdminUseCase::test_register_admin_success`
+
+---
+
+#### 🧪 TC-HU-015-02 (Positivo - Verificación exitosa)
+**Descripción:** Validar activación de cuenta con código de 6 dígitos.
+
+**Datos de Entrada:**
+- token: `123456` (válido, no expirado)
+- Endpoint: `POST /api/v1/admin/auth/verify-email`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-015-02 - Verificación de email
+  Given que existe un admin con token válido
+  And el token no ha expirado (< 24h)
+  When envío el token de verificación
+  Then el sistema marca is_verified = true
+  And limpia verification_token y verification_token_expires
+  And actualiza el registro en MongoDB
+  And envía email de bienvenida
+  And responde con 200 OK
+```
+
+**Resultado Esperado:** HTTP 200, cuenta verificada, email de bienvenida
+
+**Archivo de Test:** `tests/unit/test_admin_auth_use_cases.py::TestVerifyAdminEmailUseCase::test_verify_email_success`
+
+---
+
+#### 🧪 TC-HU-015-03 (Negativo - admin_id duplicado)
+**Descripción:** Validar rechazo de registro con admin_id existente.
+
+**Datos de Entrada:**
+- admin_id: `ospina8820` (ya existe)
+- email: `otro@yopmail.com`
+- password: `Pass123!`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-015-03 - Rechazo por duplicado
+  Given que existe admin con admin_id "ospina8820"
+  When intento registrar con el mismo admin_id
+  Then el sistema responde 400 Bad Request
+  And el mensaje es "Admin ID already exists"
+  And no se crea registro en MongoDB
+  And no se envía email
+```
+
+**Resultado Esperado:** HTTP 400, error descriptivo
+
+**Archivo de Test:** `tests/unit/test_admin_auth_use_cases.py::TestRegisterAdminUseCase::test_register_admin_duplicate_admin_id`
+
+---
+
+### 🧪 HU-016 – Login y Autenticación JWT para Administradores
+
+**Como** administrador verificado  
+**Quiero** iniciar sesión con mi admin_id y contraseña  
+**Para** acceder al Admin Dashboard con un token JWT
+
+**Descripción:**  
+Implementar endpoint de login que valide credenciales, verifique que el admin esté verificado y activo, genere un JWT con `type: "admin"`, y retorne información del administrador para el frontend.
+
+**Estimación:** 3 puntos  
+**Prioridad:** Alta  
+**Dependencias:** HU-015
+
+#### Criterios de Aceptación
+
+```gherkin
+Feature: Login de administradores
+
+  Scenario: Login exitoso con admin verificado
+    Given que existe admin "ospina8820" con password "Admin123!"
+    And el admin tiene "is_verified": true
+    And el admin tiene "is_active": true
+    When envío POST a "/api/v1/admin/auth/login" con:
+      | admin_id   | password   |
+      | ospina8820 | Admin123!  |
+    Then recibo respuesta 200 OK
+    And el response contiene "access_token" (JWT)
+    And el JWT contiene claim "type": "admin"
+    And el JWT contiene claim "sub": "ospina8820"
+    And el response contiene datos del admin (email, full_name, is_verified)
+    And se actualiza "last_login" con timestamp actual
+
+  Scenario: Rechazo por admin no verificado
+    Given que existe admin "john_admin" sin verificar email
+    When intento hacer login
+    Then recibo respuesta 403 Forbidden
+    And el mensaje indica "email not verified"
+
+  Scenario: Rechazo por credenciales incorrectas
+    Given que existe admin "ospina8820"
+    When envío password incorrecta
+    Then recibo respuesta 401 Unauthorized
+    And el mensaje indica "invalid credentials"
+    And no se actualiza last_login
+
+  Scenario: Rechazo por admin inactivo
+    Given que existe admin con "is_active": false
+    When intento hacer login
+    Then recibo respuesta 403 Forbidden
+    And el mensaje indica "account is inactive"
+```
+
+#### 🧪 TC-HU-016-01 (Positivo - Login exitoso)
+**Descripción:** Validar login completo con generación de JWT.
+
+**Datos de Entrada:**
+- admin_id: `ospina8820`
+- password: `Admin123!`
+- Endpoint: `POST /api/v1/admin/auth/login`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-01 - Login exitoso
+  Given que el admin existe y está verificado
+  And el admin está activo (is_active = true)
+  When envío credenciales correctas
+  Then el sistema verifica password con bcrypt
+  And valida que is_verified = true
+  And valida que is_active = true
+  And genera JWT con algoritmo HS256
+  And incluye claims: sub, type="admin", exp
+  And actualiza last_login en MongoDB
+  And responde 200 con token y datos del admin
+```
+
+**Resultado Esperado:** HTTP 200, JWT válido, datos completos
+
+**Archivo de Test:** `tests/unit/test_admin_auth_use_cases.py::TestLoginAdminUseCase::test_login_success`
+
+---
+
+#### 🧪 TC-HU-016-02 (Negativo - Admin no verificado)
+**Descripción:** Validar que admin sin verificar email no puede loguearse.
+
+**Datos de Entrada:**
+- admin_id: `unverified_admin`
+- password: `Pass123!`
+- is_verified: `false`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-02 - Rechazo por no verificado
+  Given que el admin existe pero is_verified = false
+  When intento hacer login
+  Then el sistema valida is_verified antes de generar token
+  And responde 403 Forbidden
+  And el mensaje es "Email not verified. Check your inbox."
+  And no se genera JWT
+  And no se actualiza last_login
+```
+
+**Resultado Esperado:** HTTP 403, mensaje claro
+
+**Archivo de Test:** `tests/unit/test_admin_auth_use_cases.py::TestLoginAdminUseCase::test_login_fails_if_not_verified`
+
+---
+
+#### 🧪 TC-HU-016-03 (Negativo - Credenciales incorrectas)
+**Descripción:** Validar rechazo con password incorrecta.
+
+**Datos de Entrada:**
+- admin_id: `ospina8820`
+- password: `WrongPassword123!`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-03 - Credenciales incorrectas
+  Given que el admin existe
+  When envío password incorrecta
+  Then el sistema compara con bcrypt
+  And la verificación falla
+  And responde 401 Unauthorized
+  And el mensaje es "Invalid credentials"
+  And no se genera token ni se actualiza last_login
+```
+
+**Resultado Esperado:** HTTP 401, sin token
+
+**Archivo de Test:** `tests/unit/test_admin_auth_use_cases.py::TestLoginAdminUseCase::test_login_fails_with_wrong_password`
+
+---
+
+### 🧪 HU-017 – Dashboard Admin con Gestión de Sesión
+
+**Como** administrador autenticado  
+**Quiero** visualizar mi información en el dashboard y cerrar sesión  
+**Para** gestionar mi acceso de forma segura
+
+**Descripción:**  
+Implementar frontend del Admin Dashboard con header que muestre el nombre del administrador, sus iniciales en un avatar clickeable, y un menú dropdown con opción de cerrar sesión que limpie el token y redirija al login.
+
+**Estimación:** 3 puntos  
+**Prioridad:** Alta  
+**Dependencias:** HU-016
+
+#### Criterios de Aceptación
+
+```gherkin
+Feature: Dashboard con gestión de sesión
+
+  Scenario: Visualización de información del admin
+    Given que hice login como "ospina8820" (Antonio Infon0)
+    And guarde el token en localStorage
+    When accedo al dashboard en "http://localhost:3001/dashboard"
+    Then veo el header con mi nombre "Antonio Infon0"
+    And veo avatar circular con iniciales "AI"
+    And el avatar es clickeable
+
+  Scenario: Apertura de menú dropdown
+    Given que estoy en el dashboard
+    When hago click en el avatar
+    Then se abre un menú dropdown
+    And el menú muestra "Sesión iniciada como"
+    And muestra mi nombre completo
+    And muestra opción "Cerrar sesión" con icono
+
+  Scenario: Cierre automático del dropdown
+    Given que el menú dropdown está abierto
+    When hago click fuera del menú
+    Then el menú se cierra automáticamente
+
+  Scenario: Logout exitoso
+    Given que hice click en "Cerrar sesión"
+    When confirmo la acción
+    Then se limpia localStorage (token, admin_id, email, full_name)
+    And me redirige a "/login"
+    And no puedo acceder a rutas protegidas
+
+  Scenario: Protección de rutas sin token
+    Given que no tengo token en localStorage
+    When intento acceder a "/dashboard"
+    Then soy redirigido automáticamente a "/login"
+```
+
+#### 🧪 TC-HU-017-01 (Positivo - Visualización de datos)
+**Descripción:** Validar que el dashboard muestra correctamente la información del admin.
+
+**Datos de Entrada:**
+- localStorage: `admin_full_name = "Antonio Infon0"`
+- localStorage: `admin_token = "<JWT_válido>"`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-017-01 - Visualización de admin
+  Given que inicié sesión correctamente
+  And guardé datos en localStorage
+  When el componente Layout se monta
+  Then lee admin_full_name de localStorage
+  And calcula iniciales ("Antonio Infon0" → "AI")
+  And renderiza nombre en header
+  And renderiza avatar con iniciales
+  And aplica estilos (bg-admin-primary, rounded-full)
+```
+
+**Resultado Esperado:** Nombre e iniciales correctas en UI
+
+**Archivo de Test:** `frontend/admin-dashboard/src/components/Layout.tsx` (manual)
+
+---
+
+#### 🧪 TC-HU-017-02 (Positivo - Dropdown interactivo)
+**Descripción:** Validar funcionamiento del menú dropdown.
+
+**Datos de Entrada:**
+- Componente: `Layout.tsx`
+- Estado: `showDropdown` (boolean)
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-017-02 - Menú dropdown
+  Given que estoy en el dashboard
+  When hago click en el avatar (botón)
+  Then se ejecuta setShowDropdown(!showDropdown)
+  And se renderiza div con menú
+  And el menú muestra nombre completo del admin
+  And muestra botón "Cerrar sesión" con icono SVG
+  And aplica posicionamiento absolute right-0
+  And el menú tiene z-index 50 (sobre otros elementos)
+```
+
+**Resultado Esperado:** Menú visible, interactivo, bien posicionado
+
+**Archivo de Test:** `frontend/admin-dashboard/src/components/Layout.tsx` (manual)
+
+---
+
+#### 🧪 TC-HU-017-03 (Positivo - Logout completo)
+**Descripción:** Validar cierre de sesión y limpieza de datos.
+
+**Datos de Entrada:**
+- localStorage antes: `admin_token, admin_id, admin_email, admin_full_name`
+- Destino: `/login`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-017-03 - Logout exitoso
+  Given que hice click en "Cerrar sesión"
+  When se ejecuta handleLogout()
+  Then se elimina localStorage.removeItem('admin_token')
+  And se elimina localStorage.removeItem('admin_id')
+  And se elimina localStorage.removeItem('admin_email')
+  And se elimina localStorage.removeItem('admin_full_name')
+  And se ejecuta navigate('/login')
+  And el ProtectedRoute valida ausencia de token
+  And redirige a login si intento acceder a /dashboard
+```
+
+**Resultado Esperado:** Sesión cerrada, localStorage limpio, redirección correcta
+
+**Archivo de Test:** `frontend/admin-dashboard/src/components/Layout.tsx` (manual)
+
+---
+
+#### 🧪 TC-HU-017-04 (Negativo - Acceso sin token)
+**Descripción:** Validar que rutas protegidas rechazan acceso sin token.
+
+**Datos de Entrada:**
+- localStorage: `admin_token = null`
+- Ruta intentada: `/dashboard`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-017-04 - Protección de rutas
+  Given que no tengo token en localStorage
+  When ProtectedRoute valida autenticación
+  Then lee localStorage.getItem('admin_token')
+  And el resultado es null
+  And renderiza <Navigate to="/login" />
+  And soy redirigido a la página de login
+  And no se renderiza el componente protegido
+```
+
+**Resultado Esperado:** Redirección a login, sin acceso
+
+**Archivo de Test:** `frontend/admin-dashboard/src/components/ProtectedRoute.tsx` (manual)
+
+---
+
+## MÓDULO 7: 💬 CHATBOT DE SOPORTE FAQ (HU-016)
+
+### 🧪 HU-016 – Chatbot de Soporte FAQ para User App
+
+**Como** usuario final de la aplicación  
+**Quiero** acceder a un chatbot de preguntas frecuentes desde la página principal  
+**Para** obtener respuestas inmediatas a mis dudas sin necesidad de contactar soporte humano
+
+**Descripción:**  
+Implementar un chatbot interactivo basado en preguntas frecuentes (FAQ) que aparezca como un botón flotante en la aplicación del usuario. El chatbot debe responder preguntas sobre cuentas, transacciones, seguridad y problemas técnicos mediante coincidencia de palabras clave, sin requerir servicios de IA externos.
+
+**Estimación:** 5 puntos  
+**Prioridad:** Media  
+**Dependencias:** Ninguna
+
+#### Criterios de Aceptación
+
+```gherkin
+Feature: Chatbot de soporte FAQ
+
+  Scenario: Usuario abre el chatbot por primera vez
+    Given que estoy en la página principal (HomePage)
+    And veo un botón flotante con ícono 💬 en esquina inferior derecha
+    When hago clic en el botón del chatbot
+    Then se abre un modal de chat con animación suave
+    And veo el mensaje de bienvenida del bot
+    
+
+  Scenario: Usuario selecciona pregunta de la lista FAQ
+    Given que el chatbot está abierto
+    And veo la lista de preguntas frecuentes
+    When escribo una pregunta
+    Then el mensaje del usuario aparece como burbuja azul
+    And aparece indicador "Bot está escribiendo..." por 600ms
+    And el bot responde con la respuesta predefinida
+    And el mensaje del bot aparece como burbuja gris
+    And el scroll automáticamente baja al último mensaje
+
+  Scenario: Usuario escribe pregunta con coincidencia
+    Given que el chatbot está abierto
+    When escribo "crear cuenta" en el campo de entrada
+    And presiono Enter o hago clic en enviar
+    Then el sistema busca coincidencias por keywords
+    And encuentra la FAQ "¿Cómo creo una cuenta?"
+    And el bot responde con la respuesta correspondiente
+    
+
+  Scenario: Usuario escribe pregunta sin coincidencia
+    Given que el chatbot está abierto
+    When escribo "una pregunta sin coincidencia"
+    And presiono Enter
+    Then el sistema no encuentra coincidencias 
+    And el bot responde con mensaje fallback
+    And el mensaje indica "No encontré una respuesta exacta"
+    And sugiere contactar soporte humano
+
+  Scenario: Usuario cierra el chatbot
+    Given que el chatbot está abierto con mensajes
+    When hago clic en el botón X de cerrar
+    Then el modal se cierra con animación
+    And el botón flotante vuelve a estado "cerrado"
+    And el historial de mensajes se mantiene en memoria
+    And si reabro, los mensajes anteriores siguen ahí
+
+ ```
+
+#### 🧪 TC-HU-016-01 (Positivo - Apertura del chatbot)
+**Descripción:** Validar que el usuario puede abrir y cerrar el chatbot correctamente.
+
+**Datos de Entrada:**
+- Página: `HomePage.tsx`
+- Componente: `ChatButton.tsx`
+- Estado inicial: `isOpen = false`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-01 - Apertura y cierre del chatbot
+  Given que el componente ChatButton está montado
+  And el estado isOpen es false
+  When el usuario hace clic en el botón
+  Then se ejecuta la función openChat()
+  And el estado isOpen cambia a true
+  And se renderiza el componente ChatModal
+  And el modal es visible con animación
+  When el usuario hace clic en cerrar
+  Then se ejecuta closeChat()
+  And el estado isOpen cambia a false
+  And el modal desaparece
+```
+
+**Resultado Esperado:** Modal abre y cierra correctamente, estado sincronizado
+
+**Archivo de Test:** `frontend/user-app/src/components/chatbot/__tests__/ChatButton.test.tsx`
+
+---
+
+
+
+#### 🧪 TC-HU-016-03 (Positivo - Búsqueda por keywords)
+**Descripción:** Validar que el sistema encuentra coincidencias por palabras clave.
+
+**Datos de Entrada:**
+- Texto usuario: `"transaccion rechazada"`
+- Keywords FAQ: `["transacción", "rechazada", "bloqueada", "denied"]`
+- Threshold: `0.15`
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-03 - Coincidencia por keywords
+  Given que existen 17 FAQs con keywords definidas
+  When el usuario escribe "transaccion rechazada"
+  Then el sistema normaliza el texto (lowercase, sin acentos)
+  And busca en todas las FAQs
+  And calcula score para cada FAQ
+  And encuentra FAQ con keywords ["transacción", "rechazada"]
+  And el score es 0.67 (2 de 3 palabras coinciden)
+  And el score >= 0.15 (threshold)
+  And devuelve la FAQ "¿Por qué mi transacción fue rechazada?"
+```
+
+**Resultado Esperado:** FAQ correcta encontrada, score >= 0.15
+
+**Archivo de Test:** `frontend/user-app/src/utils/__tests__/faqMatcher.test.ts`
+
+---
+
+
+
+**Resultado Esperado:** Mensaje fallback mostrado correctamente
+
+**Archivo de Test:** `frontend/user-app/src/hooks/__tests__/useChatbot.test.ts::test_sendMessage_with_no_match_shows_fallback`
+
+---
+
+
+#### 🧪 TC-HU-016-06 (Positivo - Persistencia de mensajes)
+**Descripción:** Validar que el historial de mensajes se mantiene al cerrar y reabrir.
+
+**Datos de Entrada:**
+- Mensajes iniciales: `3` (bienvenida + pregunta + respuesta)
+- Acción: cerrar y reabrir modal
+
+**Pasos:**
+```gherkin
+Scenario: TC-HU-016-06 - Persistencia de conversación
+  Given que el usuario tuvo una conversación con 3 mensajes
+  And el estado messages contiene esos 3 mensajes
+  When el usuario cierra el modal (isOpen = false)
+  Then el estado messages NO se resetea
+  And messages sigue conteniendo los 3 mensajes
+  When el usuario reabre el modal (isOpen = true)
+  Then ChatModal renderiza los mensajes existentes
+  And el usuario ve el historial completo
+  And puede continuar la conversación
+```
+
+**Resultado Esperado:** Conversación persiste durante la sesión
+
+**Archivo de Test:** `frontend/user-app/src/hooks/__tests__/useChatbot.test.ts::test_messages_persist_across_open_close`
+
+---
+
+**Documento actualizado:** Enero 21, 2026    
+**Versión:** 1.2  
+**Módulos agregados:** MÓDULO 7 - Chatbot de Soporte FAQ

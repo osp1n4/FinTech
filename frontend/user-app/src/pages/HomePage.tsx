@@ -4,6 +4,8 @@ import { CreditCard, DollarSign, Activity } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getUserTransactions } from '../services/api';
 import { useState, useEffect } from 'react';
+import { ChatButton, ChatModal } from '../components/chatbot';
+import { useChatbot } from '../hooks/useChatbot';
 
 interface HomePageProps {
   readonly onNavigate: (page: 'new-transaction' | 'my-transactions') => void;
@@ -26,6 +28,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Chatbot hook
+  const chatbot = useChatbot();
   
   const cardNumber = "**** **** **** 4521";
   
@@ -82,7 +87,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const recentTransactions = transactions.length;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <>
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       {/* Saludo personalizado */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -248,6 +254,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </button>
         </Card>
       </motion.div>
-    </div>
+      </div>
+    
+      {/* Chatbot de Soporte */}
+      <ChatButton onClick={chatbot.openChat} />
+      <ChatModal
+        isOpen={chatbot.isOpen}
+        onClose={chatbot.closeChat}
+        messages={chatbot.messages}
+        isTyping={chatbot.isTyping}
+        onSendMessage={chatbot.sendMessage}
+        onSelectFAQ={chatbot.selectFAQ}
+      />
+    </>
   );
 }
