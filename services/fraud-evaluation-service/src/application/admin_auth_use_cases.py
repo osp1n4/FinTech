@@ -50,7 +50,7 @@ class RegisterAdminUseCase:
         self.email_service = email_service
         self.base_url = base_url
     
-    async def execute(
+    def execute(
         self,
         admin_id: str,
         email: str,

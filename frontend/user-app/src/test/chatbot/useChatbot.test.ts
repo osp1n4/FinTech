@@ -5,7 +5,7 @@
  * Metodología TDD - FASE RED
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useChatbot } from '../../hooks/useChatbot';
 import { WELCOME_MESSAGE } from '../../data/faqData';
